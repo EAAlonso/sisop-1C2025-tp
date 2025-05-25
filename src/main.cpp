@@ -1,5 +1,6 @@
 #include "../headers/Cocinero.h"
 #include "../headers/Menu.h"
+#include "../headers/Combo.h"
 
 int main()
 {

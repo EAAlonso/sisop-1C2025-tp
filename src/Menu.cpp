@@ -5,21 +5,21 @@ Menu::Menu() {
 
     do {
         this->mostrarMenu();
-        std::cin >> opcion;
+        cin >> opcion;
 
         switch (opcion) {
             case 1:
-                mostrarCombos();
+                mostrarOpcionesCombos();
                 seleccionarCombo();
                 break;
             case 2:
                 //showStatusMenu();
                 break;
             case 3:
-                printf("Saliendo del programa.\n");
+                cout << "Saliendo del programa.\n" << endl;
                 break;
             default:
-                printf("Opción no válida.\n");
+                cout << "Opción no válida." << endl;
                 break;
         }
     } while(opcion != 3);
@@ -27,41 +27,41 @@ Menu::Menu() {
 }
 
 void Menu::mostrarTitulo() {
-    std::cout << "\033[H\033[J";
-    std::cout << "¡¡¡Bienvenidos a FORK & BURGER!!!" << std::endl;
-    std::cout << SEPARATOR;
+    system("clear");
+    cout << "¡¡¡Bienvenidos a FORK & BURGER!!!" << endl;
+    cout << SEPARATOR;
 }
 
 void Menu::mostrarMenu() {
     mostrarTitulo();
-    printf("1. Crear Combo\n");
-    printf("2. Mostrar Combos\n");
-    printf(SEPARATOR);
-    printf("3. Salir\n");
-    printf(SEPARATOR);
-    printf("Su opción: ");
+    cout <<  "1. Crear Combo" << endl;
+    cout << "2. Mostrar Combos" << endl;
+    cout << SEPARATOR << endl;
+    cout << "3. Salir" << endl;
+    cout << SEPARATOR << endl;
+    cout << "Su opción: " << endl;
 }
 
 void Menu::seleccionarCombo() {
     int opcion;
-    scanf("%d", &opcion);
+    cin >> opcion;
     
     if (opcion == 4) {
-        printf("Volviendo al menú principal...\n");
+        cout << "Volviendo al menú principal..." << endl;
         return;
     }
 
     //CreateComboOrder(opcion);
 }
 
-void Menu::mostrarCombos() {
+void Menu::mostrarOpcionesCombos() {
     mostrarTitulo();
-    printf("Elegir un combo:\n");
-    printf("1. Combo Simple\n");
-    printf("2. Combo Doble\n");
-    printf("3. Combo Completo\n");
-    printf(SEPARATOR);
-    printf("4. Volver\n");
-    printf(SEPARATOR);
-    printf("Su opción: ");
+    cout << "Elegir un combo:" << endl;
+    cout << "1. Combo Simple" << endl;
+    cout << "2. Combo Doble" << endl;
+    cout << "3. Combo Completo" << endl;
+    cout << SEPARATOR << endl;
+    cout << "4. Volver" << endl;
+    cout << SEPARATOR << endl;
+    cout << "Su opción: " << endl;
 }
