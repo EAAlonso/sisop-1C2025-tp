@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "../include/menu.h"
-#include "../include/combo.h"
+#include "../headers/menuOLD.h"
+#include "../headers/comboOLD.h"
 
 void title() {
     printf("\033[H\033[J");

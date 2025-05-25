@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/combo.h"
-#include "../include/menu.h"
+#include "../headers/comboOLD.h"
+#include "../headers/menuOLD.h"
 
 
 Combo combos[MAX_COMBOS]; // Define the shared array of combos

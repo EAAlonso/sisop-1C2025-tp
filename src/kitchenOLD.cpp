@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <unistd.h> // For sleep()
 #include <pthread.h>
-#include "../include/combo.h"
+#include "../headers/comboOLD.h"
 #include <iostream>
 
 // External variables from combo.c
