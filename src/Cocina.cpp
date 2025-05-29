@@ -1,10 +1,5 @@
 #include "../headers/Cocina.h"
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/sem.h>
-#include <cstring>
-#include <iostream>
-#include <unistd.h>
+
 
 #define CLAVE_MEMORIA 1234
 #define CLAVE_SEM 5678
@@ -105,7 +100,9 @@ void Cocina::llamarCocineros(int cantidadCocineros) {
 
             // Proceso hijo: se queda esperando pedidos
             cout << "Cocinero " << i + 1 << " listo. PID: " << getpid() << endl;
-            atenderPedidos(); // este método no debe salir
+            cocineros.push_back(pid);
+            //atenderPedidos(); // este método no debe salir
+
             exit(EXIT_SUCCESS); // por si acaso
         }
     }
@@ -140,4 +137,36 @@ void Cocina::atenderPedidos() {
         sleep(5);
         cout << "PID " << getpid() << " completó pedido ID: " << pedido.id << endl;
     }
+}
+
+
+Cocina::~Cocina() {
+    std::cout << "Cerrando cocina...\n";
+
+    // Matar procesos hijos
+    for (pid_t pid : cocineros) {
+        kill(pid, SIGTERM);  // Podés usar SIGKILL si no responden
+        waitpid(pid, nullptr, 0); // Esperamos que terminen
+        std::cout << "Cocinero con PID " << pid << " terminado.\n";
+    }
+
+    // Liberar semáforos
+    if (semctl(semid, 0, IPC_RMID) == -1) {
+        perror("Error al eliminar semáforos");
+    } else {
+        std::cout << "Semáforos eliminados.\n";
+    }
+
+    // Liberar memoria compartida
+    if (shmdt(colaPedidos) == -1) {
+        perror("Error al desadjuntar memoria compartida");
+    }
+
+    if (shmctl(shmid, IPC_RMID, nullptr) == -1) {
+        perror("Error al eliminar segmento de memoria compartida");
+    } else {
+        std::cout << "Memoria compartida eliminada.\n";
+    }
+
+    std::cout << "Cocina finalizada correctamente.\n";
 }
