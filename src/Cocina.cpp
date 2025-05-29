@@ -11,6 +11,7 @@
 #define MUTEX_PEDIDOS 0 // Para el semnum
 #define PEDIDOS_PENDIENTES 1 // Para el semnum
 
+
 Cocina::Cocina() {
     inicializar();
 }
@@ -64,25 +65,79 @@ void Cocina::encolarPedido(Pedido pedido) {
 
     semop(semid, &liberarMutex, 1);
 
-    // Señalar que hay un nuevo pedido
+    // se agrega un nuevo pedido
     struct sembuf pedido_up = {1, 1, 0};
     semop(semid, &pedido_up, 1);
 }
 
 Pedido Cocina::desencolarPedido() {
-    struct sembuf pedido_down = {1, -1, 0};
-    struct sembuf mutex_down  = {0, -1, 0};
-    struct sembuf mutex_up    = {0, 1, 0};
+    struct sembuf pedirMutex = {0, -1, 0};
+    struct sembuf liberarMutex  = {0, 1, 0};
 
     // Espera un pedido disponible
-    semop(semid, &pedido_down, 1);
-    semop(semid, &mutex_down, 1);
+    semop(semid, &pedirMutex, 1);
 
     Pedido pedido = colaPedidos->pedidos[colaPedidos->pri];
     colaPedidos->pri = (colaPedidos->pri + 1) % MAX_PEDIDOS;
     colaPedidos->cantidad--;
 
-    semop(semid, &mutex_up, 1);
+    semop(semid, &liberarMutex, 1);
 
     return pedido;
+}
+
+bool Cocina::colaVacia(){
+    return colaPedidos->cantidad = 0;
+}
+
+void Cocina::llamarCocineros(int cantidadCocineros) {
+
+    cout << "Llamando a " << cantidadCocineros << " cocineros..." << endl;
+
+    for (int i = 0; i < cantidadCocineros; ++i) {
+        pid_t pid = fork();
+
+        if (pid < 0) {
+            cerr << "Error al crear el proceso del cocinero." << endl;
+            exit(EXIT_FAILURE);
+
+        } else if (pid == 0) {
+
+            // Proceso hijo: se queda esperando pedidos
+            cout << "Cocinero " << i + 1 << " listo. PID: " << getpid() << endl;
+            atenderPedidos(); // este método no debe salir
+            exit(EXIT_SUCCESS); // por si acaso
+        }
+    }
+
+    cout << "Todos los cocineros están activos y esperando pedidos.\n";
+}
+
+
+void Cocina::atenderPedidos() {
+
+    while (true) {
+        
+        // Espera a que haya un pedido
+        struct sembuf wait_pedido = {1, -1, 0};
+        semop(semid, &wait_pedido, 1);
+
+        // Toma mutex para leer de la cola
+        struct sembuf pedirMutex = {0, -1, 0};
+        semop(semid, &pedirMutex, 1);
+
+        Pedido pedido;
+        if (colaPedidos->cantidad > 0) {
+            pedido = desencolarPedido();
+            // PROCESAR PEDIDO
+        }
+
+        // Libera mutex
+        struct sembuf liberarMutex = {0, 1, 0};
+        semop(semid, &liberarMutex, 1);
+
+        cout << "PID " << getpid() << " procesando pedido ID: " << pedido.id << endl;
+        sleep(5);
+        cout << "PID " << getpid() << " completó pedido ID: " << pedido.id << endl;
+    }
 }

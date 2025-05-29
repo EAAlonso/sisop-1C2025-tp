@@ -1,4 +1,4 @@
-enum class EstadoCombo {
+enum class EstadoPedido {
     PENDIENTE,
     EN_PROCESO,
     TERMINADO
