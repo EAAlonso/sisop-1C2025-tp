@@ -11,11 +11,6 @@ Cocina::Cocina() {
     inicializar();
 }
 
-Cocina::~Cocina() {
-    shmdt((void*) colaPedidos);
-    // Opcional: shmctl(shmid, IPC_RMID, NULL);
-}
-
 void Cocina::inicializar() {
     
     // Crear memoria compartida
@@ -141,32 +136,33 @@ void Cocina::atenderPedidos() {
 
 
 Cocina::~Cocina() {
-    std::cout << "Cerrando cocina...\n";
 
+    cout << "Cerrando cocina...\n";
+    
     // Matar procesos hijos
     for (pid_t pid : cocineros) {
         kill(pid, SIGTERM);  // Podés usar SIGKILL si no responden
         waitpid(pid, nullptr, 0); // Esperamos que terminen
-        std::cout << "Cocinero con PID " << pid << " terminado.\n";
+        cout << "Cocinero con PID " << pid << " terminado.\n";
     }
-
+    
     // Liberar semáforos
     if (semctl(semid, 0, IPC_RMID) == -1) {
         perror("Error al eliminar semáforos");
     } else {
-        std::cout << "Semáforos eliminados.\n";
+        cout << "Semáforos eliminados.\n";
     }
-
+    
     // Liberar memoria compartida
     if (shmdt(colaPedidos) == -1) {
-        perror("Error al desadjuntar memoria compartida");
+        perror("Error al liberar memoria compartida");
     }
-
+    
     if (shmctl(shmid, IPC_RMID, nullptr) == -1) {
         perror("Error al eliminar segmento de memoria compartida");
     } else {
-        std::cout << "Memoria compartida eliminada.\n";
+        cout << "Memoria compartida eliminada.\n";
     }
 
-    std::cout << "Cocina finalizada correctamente.\n";
+    cout << "Cocina cerrada correctamente.\n";
 }

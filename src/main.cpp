@@ -6,9 +6,9 @@ int main()
 {
 
     Cocina cocina;
-    cocina.llamarCocineros(5);
+    cocina.llamarCocineros(3);
 
-    //Menu menu;
+    Menu menu;
 
     return 0;
 }
