@@ -1,6 +1,14 @@
-#include "../headers/Menu.h"
+#include "../headers/menu.hpp"
+#include <limits>
 
 Menu::Menu() {
+    pedido = Pedido();
+
+    // Constructor should only initialize the object
+    // You can initialize variables or set up the state here if needed
+}
+
+void Menu::Mostrar() {
     int opcion;
 
     do {
@@ -51,7 +59,7 @@ void Menu::seleccionarCombo() {
         return;
     }
 
-    //CreateComboOrder(opcion);
+    pedido.CrearPedido(opcion);
 }
 
 void Menu::mostrarOpcionesCombos() {
@@ -64,4 +72,9 @@ void Menu::mostrarOpcionesCombos() {
     cout << "4. Volver" << endl;
     cout << SEPARATOR << endl;
     cout << "Su opción: " << endl;
+}
+
+void Menu::EsperarAccion() {  
+    std::cout << "Presionar ENTER para continuar...";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }

@@ -1,7 +1,6 @@
-#ifndef COLAPEDIDOS_H
-#define COLAPEDIDOS_H
+#pragma once
 
-#include "Pedido.h"
+#include "pedido.hpp"
 
 #define MAX_PEDIDOS 50
 
@@ -11,5 +10,3 @@ struct ColaPedidos {
     int ult;
     int cantidad;
 };
-
-#endif

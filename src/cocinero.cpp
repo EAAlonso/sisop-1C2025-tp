@@ -1,4 +1,4 @@
-#include "../headers/Cocinero.h"
+#include "../headers/cocinero.hpp"
 
 Cocinero::Cocinero() {
     this->id = 0;

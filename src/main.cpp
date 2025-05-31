@@ -1,14 +1,20 @@
-#include "../headers/Cocinero.h"
-#include "../headers/Cocina.h"
-#include "../headers/Menu.h"
+#include "../headers/cocinero.hpp"
+#include "../headers/cocina.hpp"
+#include "../headers/menu.hpp"
+#include <limits>
+
+#define MAX_COCINEROS 3
 
 int main()
 {
 
     Cocina cocina;
-    cocina.llamarCocineros(3);
-
     Menu menu;
+
+    cocina.LlamarCocineros(MAX_COCINEROS);
+    
+    menu.EsperarAccion();
+    menu.Mostrar();
 
     return 0;
 }

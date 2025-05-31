@@ -1,4 +1,4 @@
-#include "../headers/Cocina.h"
+#include "../headers/cocina.hpp"
 
 
 #define CLAVE_MEMORIA 1234
@@ -14,7 +14,7 @@ Cocina::Cocina() {
 void Cocina::inicializar() {
     
     // Crear memoria compartida
-    shmid = shmget(CLAVE_MEMORIA, sizeof(ColaPedidos), IPC_CREAT | 0666);
+    shmid = shmget(CLAVE_MEMORIA, sizeof(ColaPedidos*), IPC_CREAT | 0666);
     if (shmid == -1) {
         perror("Error creando memoria compartida");
         exit(1);
@@ -39,7 +39,7 @@ void Cocina::inicializar() {
     }
 }
 
-void Cocina::encolarPedido(Pedido pedido) {
+void Cocina::EncolarPedido(Pedido pedido) {
 
     // define la estructura sembuf (semId, valorMutex, comportamiento por defecto -> esperar)
     struct sembuf pedirMutex = {0, -1, 0};
@@ -80,28 +80,28 @@ bool Cocina::colaVacia(){
     return colaPedidos->cantidad = 0;
 }
 
-void Cocina::llamarCocineros(int cantidadCocineros) {
+void Cocina::LlamarCocineros(int cantidadCocineros) {
 
     cout << "Llamando a " << cantidadCocineros << " cocineros..." << endl;
 
     for (int i = 0; i < cantidadCocineros; ++i) {
         pid_t pid = fork();
 
-        if (pid < 0) {
+        if (pid == 0) {
+            // Proceso hijo: se queda esperando pedidos
+            atenderPedidos(); // este método no debe salir
+            exit(EXIT_SUCCESS); // por si acaso
+        } else if (pid > 0) {
+            // Proceso padre: guarda el PID del cocinero
+            cocineros.push_back(pid);
+            cout << "Cocinero con PID " << pid << " creado.\n";
+        } else {
+            // Error al crear el proceso
             cerr << "Error al crear el proceso del cocinero." << endl;
             exit(EXIT_FAILURE);
-
-        } else if (pid == 0) {
-
-            // Proceso hijo: se queda esperando pedidos
-            cout << "Cocinero " << i + 1 << " listo. PID: " << getpid() << endl;
-            cocineros.push_back(pid);
-            //atenderPedidos(); // este método no debe salir
-
-            exit(EXIT_SUCCESS); // por si acaso
         }
     }
-
+    
     cout << "Todos los cocineros están activos y esperando pedidos.\n";
 }
 
