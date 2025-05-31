@@ -1,83 +1,11 @@
 #include "../headers/cocina.hpp"
 
-
-#define CLAVE_MEMORIA 1234
-#define CLAVE_SEM 5678
-#define MUTEX_PEDIDOS 0 // Para el semnum
-#define PEDIDOS_PENDIENTES 1 // Para el semnum
-
+Pedido colaPedidos; // Instancia global de la cola de pedidos
 
 Cocina::Cocina() {
-    inicializar();
-}
-
-void Cocina::inicializar() {
-    
-    // Crear memoria compartida
-    shmid = shmget(CLAVE_MEMORIA, sizeof(ColaPedidos*), IPC_CREAT | 0666);
-    if (shmid == -1) {
-        perror("Error creando memoria compartida");
-        exit(1);
-    }
-
-    colaPedidos = (ColaPedidos*) shmat(shmid, NULL, 0);
-
-    // Crear semáforo (0 = mutex, 1 = pedidos disponibles)
-    semid = semget(CLAVE_SEM, 2, IPC_CREAT | 0666);
-    if (semid == -1) {
-        perror("Error creando semáforo");
-        exit(1);
-    }
-
-    // Inicializar si es nuevo
-    if (colaPedidos->cantidad == 0) {
-        colaPedidos->pri = 0;
-        colaPedidos->ult = 0;
-        colaPedidos->cantidad = 0;
-        semctl(semid, MUTEX_PEDIDOS, SETVAL, 1); // mutex
-        semctl(semid, PEDIDOS_PENDIENTES, SETVAL, 0); // Hay 0 pedidos disponibles al principio
-    }
-}
-
-void Cocina::EncolarPedido(Pedido pedido) {
-
-    // define la estructura sembuf (semId, valorMutex, comportamiento por defecto -> esperar)
-    struct sembuf pedirMutex = {0, -1, 0};
-    struct sembuf liberarMutex  = {0, 1, 0};
-
-    semop(semid, &pedirMutex, 1);
-
-    if (colaPedidos->cantidad < MAX_PEDIDOS) {
-        colaPedidos->pedidos[colaPedidos->ult] = pedido;
-        colaPedidos->ult = (colaPedidos->ult + 1) % MAX_PEDIDOS;
-        colaPedidos->cantidad++;
-    }
-
-    semop(semid, &liberarMutex, 1);
-
-    // se agrega un nuevo pedido
-    struct sembuf pedido_up = {1, 1, 0};
-    semop(semid, &pedido_up, 1);
-}
-
-Pedido Cocina::desencolarPedido() {
-    struct sembuf pedirMutex = {0, -1, 0};
-    struct sembuf liberarMutex  = {0, 1, 0};
-
-    // Espera un pedido disponible
-    semop(semid, &pedirMutex, 1);
-
-    Pedido pedido = colaPedidos->pedidos[colaPedidos->pri];
-    colaPedidos->pri = (colaPedidos->pri + 1) % MAX_PEDIDOS;
-    colaPedidos->cantidad--;
-
-    semop(semid, &liberarMutex, 1);
-
-    return pedido;
-}
-
-bool Cocina::colaVacia(){
-    return colaPedidos->cantidad = 0;
+    cout << "Iniciando cocina..." << endl;
+    colaPedidos = Pedido();
+    colaPedidos.InitColaPedidos();
 }
 
 void Cocina::LlamarCocineros(int cantidadCocineros) {
@@ -88,9 +16,8 @@ void Cocina::LlamarCocineros(int cantidadCocineros) {
         pid_t pid = fork();
 
         if (pid == 0) {
-            // Proceso hijo: se queda esperando pedidos
-            atenderPedidos(); // este método no debe salir
-            exit(EXIT_SUCCESS); // por si acaso
+            atenderPedidos();
+            exit(EXIT_SUCCESS);
         } else if (pid > 0) {
             // Proceso padre: guarda el PID del cocinero
             cocineros.push_back(pid);
@@ -107,29 +34,18 @@ void Cocina::LlamarCocineros(int cantidadCocineros) {
 
 
 void Cocina::atenderPedidos() {
-
-    while (true) {
-        
-        // Espera a que haya un pedido
-        struct sembuf wait_pedido = {1, -1, 0};
-        semop(semid, &wait_pedido, 1);
-
-        // Toma mutex para leer de la cola
-        struct sembuf pedirMutex = {0, -1, 0};
-        semop(semid, &pedirMutex, 1);
-
-        Pedido pedido;
-        if (colaPedidos->cantidad > 0) {
-            pedido = desencolarPedido();
-            // PROCESAR PEDIDO
+    while (true) { // TODO: FLAG SIG
+        s_Pedido pedido = s_Pedido();
+        if (!colaPedidos.PopPedido(pedido)) {
+            cout << "No hay pedidos disponibles. Cocinero " << getpid() << " esperando..." << endl;
+            sleep(1); // Espera antes de volver a intentar
+            continue; // Volver al inicio del bucle para esperar un nuevo pedido
         }
-
-        // Libera mutex
-        struct sembuf liberarMutex = {0, 1, 0};
-        semop(semid, &liberarMutex, 1);
-
+        pedido.estado = EstadoPedido::EN_PROCESO;
+        // Procesar el pedido
         cout << "PID " << getpid() << " procesando pedido ID: " << pedido.id << endl;
-        sleep(5);
+        sleep(pedido.combo.tiempoPreparacion); // Simula el tiempo de preparación del pedido
+        pedido.estado = EstadoPedido::TERMINADO;
         cout << "PID " << getpid() << " completó pedido ID: " << pedido.id << endl;
     }
 }
@@ -140,29 +56,11 @@ Cocina::~Cocina() {
     cout << "Cerrando cocina...\n";
     
     // Matar procesos hijos
-    for (pid_t pid : cocineros) {
+    /*for (pid_t pid : cocineros) {
         kill(pid, SIGTERM);  // Podés usar SIGKILL si no responden
         waitpid(pid, nullptr, 0); // Esperamos que terminen
         cout << "Cocinero con PID " << pid << " terminado.\n";
-    }
-    
-    // Liberar semáforos
-    if (semctl(semid, 0, IPC_RMID) == -1) {
-        perror("Error al eliminar semáforos");
-    } else {
-        cout << "Semáforos eliminados.\n";
-    }
-    
-    // Liberar memoria compartida
-    if (shmdt(colaPedidos) == -1) {
-        perror("Error al liberar memoria compartida");
-    }
-    
-    if (shmctl(shmid, IPC_RMID, nullptr) == -1) {
-        perror("Error al eliminar segmento de memoria compartida");
-    } else {
-        cout << "Memoria compartida eliminada.\n";
-    }
+    }*/
 
     cout << "Cocina cerrada correctamente.\n";
 }

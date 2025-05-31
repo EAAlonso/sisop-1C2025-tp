@@ -35,7 +35,7 @@ void Menu::Mostrar() {
 }
 
 void Menu::mostrarTitulo() {
-    system("clear");
+    //system("clear");
     cout << "¡¡¡Bienvenidos a FORK & BURGER!!!" << endl;
     cout << SEPARATOR;
 }
