@@ -1,0 +1,48 @@
+# Compilados y objetos
+*.o
+*.obj
+*.so
+*.a
+*.lib
+*.dll
+*.exe
+*.out
+*.app
+
+# Directorios comunes de build
+/build/
+/bin/
+/obj/
+
+# Archivos de depuración y logs
+*.log
+*.dSYM/
+*.stackdump
+core
+core.*
+
+# Archivos temporales del sistema y editores
+*~
+*.swp
+*.tmp
+*.bak
+*.old
+*.sublime-workspace
+*.sublime-project
+*.vscode/
+*.idea/
+
+# Archivos generados por Make
+Makefile~
+*.dep
+*.d
+
+# Archivos de CMake (si se usa)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Archivos de pruebas o temporales propios
+test-output/

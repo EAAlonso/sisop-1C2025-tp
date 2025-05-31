@@ -1,103 +1,80 @@
-#include <stdio.h>
-#include "../include/menu.h"
-#include "../include/combo.h"
+#include "../headers/menu.hpp"
+#include <limits>
 
-void title() {
-    printf("\033[H\033[J");
-    printf("Sistema de gestión de combos.\n");
-    printf(SEPARATOR);
+Menu::Menu() {
+    pedido = Pedido();
+
+    // Constructor should only initialize the object
+    // You can initialize variables or set up the state here if needed
 }
 
-void statusMenuStr() {
-    title();
-    printf("Ordenes por estado:\n");
-    printf("1. Pendientes\n");
-    printf("2. En Proceso\n");
-    printf("3. Terminado\n");
-    printf(SEPARATOR);
-    printf("4. Todas las ordenes\n");
-    printf(SEPARATOR);
-    printf("5. Volver\n");
-    printf(SEPARATOR);
-    printf("Su opción: ");
+void Menu::Mostrar() {
+    int opcion;
+
+    do {
+        this->mostrarMenu();
+        cin >> opcion;
+
+        switch (opcion) {
+            case 1:
+                mostrarOpcionesCombos();
+                seleccionarCombo();
+                break;
+            case 2:
+                //showStatusMenu();
+                break;
+            case 3:
+                cout << "Saliendo del programa.\n" << endl;
+                break;
+            default:
+                cout << "Opción no válida." << endl;
+                break;
+        }
+    } while(opcion != 3);
+    exit(0);
 }
 
-void comboMenuStr() {
-    title();
-    printf("Elegir un combo:\n");
-    printf("1. Combo Simple\n");
-    printf("2. Combo Doble\n");
-    printf("3. Combo Completo\n");
-    printf(SEPARATOR);
-    printf("4. Volver\n");
-    printf(SEPARATOR);
-    printf("Su opción: ");
+void Menu::mostrarTitulo() {
+    //system("clear");
+    cout << "¡¡¡Bienvenidos a FORK & BURGER!!!" << endl;
+    cout << SEPARATOR;
 }
 
-void mainMenuStr() {
-    title();
-    printf("1. Crear Combo\n");
-    printf("2. Mostrar Combos\n");
-    printf(SEPARATOR);
-    printf("3. Salir\n");
-    printf(SEPARATOR);
-    printf("Su opción: ");
+void Menu::mostrarMenu() {
+    mostrarTitulo();
+    cout <<  "1. Crear Combo" << endl;
+    cout << "2. Mostrar Combos" << endl;
+    cout << SEPARATOR << endl;
+    cout << "3. Salir" << endl;
+    cout << SEPARATOR << endl;
+    cout << "Su opción: " << endl;
 }
 
-
-void showCreateComboMenu() {
-    comboMenuStr();
-    int option;
-    scanf("%d", &option);
+void Menu::seleccionarCombo() {
+    int opcion;
+    cin >> opcion;
     
-    if (option == 4) {
-        printf("Volviendo al menú principal...\n");
+    if (opcion == 4) {
+        cout << "Volviendo al menú principal..." << endl;
         return;
     }
 
-    CreateComboOrder(option);
+    pedido.CrearPedido(opcion);
 }
 
-void showStatusMenu() {
-    statusMenuStr();
-    int option;
-    scanf("%d", &option);
-    
-    if (option == 5) {
-        printf("Volviendo al menú principal...\n");
-        return;
-    }
-
-    OrdersReport(option);
+void Menu::mostrarOpcionesCombos() {
+    mostrarTitulo();
+    cout << "Elegir un combo:" << endl;
+    cout << "1. Combo Simple" << endl;
+    cout << "2. Combo Doble" << endl;
+    cout << "3. Combo Completo" << endl;
+    cout << SEPARATOR << endl;
+    cout << "4. Volver" << endl;
+    cout << SEPARATOR << endl;
+    cout << "Su opción: " << endl;
 }
 
-int RenderMenu() {
-    title();
-    mainMenuStr();
-    int option;
-    scanf("%d", &option);
-    
-    switch (option) {
-        case 1:
-            showCreateComboMenu();
-            break;
-        case 2:
-            showStatusMenu();
-            break;
-        case 3:
-            printf("Saliendo del programa.\n");
-            return -1;
-            break;
-        default:
-            printf("Opción no válida.\n");
-            break;
-    }
-
-    return 1;
-}
-
-void WaitForUserInput() {
-    printf("Presione Enter para continuar...");
-    getchar(); // Clear the input buffer
-    getchar(); // Wait for user to press Enter
+void Menu::EsperarAccion() {  
+    std::cout << "Presionar ENTER para continuar...";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }

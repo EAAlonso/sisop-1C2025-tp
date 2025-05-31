@@ -1,13 +1,28 @@
-#include <stdio.h>
-#include "../include/menu.h"
-#include "../include/kitchen.h"
+#include "../headers/cocinero.hpp"
+#include "../headers/cocina.hpp"
+#include "../headers/menu.hpp"
+#include "../headers/pedido.hpp"
+
+#include <limits>
+
+
+#define MAX_COCINEROS 3
 
 int main()
 {
-    StartKitchenThread();
-    //int run = 1;
-    while (RenderMenu())
-    {
-    }
+
+    //Pedido pedidos;
+    Cocina cocina = Cocina();
+    Menu menu;
+
+    //pedidos.InitColaPedidos();
+
+    cocina.LlamarCocineros(MAX_COCINEROS);
+    
+    menu.EsperarAccion();
+    menu.Mostrar();
+
+    //pedidos.DestroySemaforosColaPedidos();
+
     return 0;
 }
