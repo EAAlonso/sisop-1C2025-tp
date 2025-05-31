@@ -81,51 +81,70 @@ void Cocina::aceptarClientes()
 }
 
 // Lógica de procesamiento del pedido
+#include "../headers/json.hpp"
+
+#include "../headers/combo.hpp"
+#include "../headers/json.hpp" // Asegurate de incluir json.hpp
+#include <unistd.h>            // para close() y sleep()
+
 void Cocina::manejarCliente(int socket)
 {
-    std::cout << "[Cocina] Pedido recibido. Atendiendo cliente..." << std::endl;
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
 
-    try
-    {
-        char buffer[1024];
-        memset(buffer, 0, sizeof(buffer));
+    ssize_t bytesRecibidos = recv(socket, buffer, sizeof(buffer) - 1, 0);
+    if (bytesRecibidos <= 0) {
+        std::cout << "[Cocina] Cliente desconectado inesperadamente." << std::endl;
+        close(socket);
+        sem_post(&semaforoCapacidad);
+        return;
+    }
 
-        ssize_t bytesRecibidos = recv(socket, buffer, sizeof(buffer) - 1, 0);
-        if (bytesRecibidos <= 0)
-        {
-            std::cout << "[Cocina] Cliente desconectado inesperadamente." << std::endl;
+    try {
+        nlohmann::ordered_json recibido = nlohmann::ordered_json::parse(buffer);
+        std::string tipo = recibido.value("tipo", "");
+        std::string comboStr = recibido.value("combo", "");
+
+        if (tipo != "pedido" || comboStr.empty()) {
+            std::cerr << "[Cocina] Pedido inválido recibido." << std::endl;
             close(socket);
             sem_post(&semaforoCapacidad);
             return;
         }
 
-        std::string pedido(buffer);
-        std::cout << "[Cocina] Pedido: " << pedido << std::endl;
+        // Crear el combo a partir del pedido
+        Combo combo(comboStr);
+        std::cout << "[Cocina] Pedido recibido - Combo: " << combo.getTipo() << std::endl;
 
-        // Simulación paso a paso
-        auto paso = [&](const std::string &mensaje, int delaySeg = 1)
-        {
-            std::string texto = mensaje + "\n";
-            send(socket, texto.c_str(), texto.size(), 0);
-            std::cout << "[Cocina] " << mensaje << std::endl;
+        // Enviar los pasos como JSON
+        auto enviarPaso = [&](const std::string& estado, const std::string& extra = "", int delaySeg = 1) {
+            nlohmann::ordered_json mensaje;
+            mensaje["estado"] = estado;
+            if (!extra.empty())
+                mensaje["detalle"] = extra;
+
+            std::string str = mensaje.dump() + "\n";
+            send(socket, str.c_str(), str.size(), 0);
+
+            std::cout << "[Cocina] " << mensaje.dump() << std::endl;
             sleep(delaySeg);
         };
 
-        paso("Tomando pedido...");
-        paso("Cocinando ingredientes...");
-        paso("Armando combo...");
-        paso("Empaquetando...");
-        paso("Entregado!");
+        enviarPaso("tomando_pedido");
+        enviarPaso("cocinando");
+        enviarPaso("armando_combo", combo.getDetalle());
+        enviarPaso("empaquetando");
+        enviarPaso("entregado");
 
-        close(socket);
-    }
-    catch (...)
-    {
-        std::cerr << "[Cocina] Error inesperado atendiendo cliente." << std::endl;
+    } catch (const nlohmann::json::parse_error& e) {
+        std::cerr << "[Cocina] Error al parsear JSON: " << e.what() << std::endl;
     }
 
-    sem_post(&semaforoCapacidad); // Liberar espacio en cocina
+    close(socket);
+    sem_post(&semaforoCapacidad);
 }
+
+
 
 // Cerrar conexión de forma segura
 void Cocina::cerrarConexion(int socket)
