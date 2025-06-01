@@ -1,13 +1,13 @@
 #include "../headers/combo.hpp"
 
-Combo::Combo(const std::string& tipoCombo)
+Combo::Combo(const string& tipoCombo)
     : tipo(tipoCombo) {}
 
-std::string Combo::getTipo() const {
+string Combo::getTipo() const {
     return tipo;
 }
 
-std::string Combo::getDetalle() const {
+string Combo::getDetalle() const {
     if (tipo == "S") {
         return "1 carne, 1 queso, 2 panes";
     } else if (tipo == "D") {

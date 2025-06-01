@@ -4,25 +4,25 @@
 
 Cocina* cocinaPtr = nullptr;
 
-void signalHandler(int signum) {
-    std::cout << "\n[Main] Señal recibida, apagando cocina...\n";
+void signalCerrarCocina(int signum) {
+    cout << "\n[Main - Servidor] Señal recibida, cerrando cocina...\n";
     if (cocinaPtr) {
-        cocinaPtr->apagar();
+        cocinaPtr->cerrarCocina();
     }
     exit(signum);
 }
 
 int main() {
-    signal(SIGPIPE, SIG_IGN);  // 👈 ACÁ
+    signal(SIGPIPE, SIG_IGN); // previene que el proceso se termine si intenta escribir en un socket que ya fue cerrado por el cliente
 
     int puerto = 8080;
     cocinaPtr = new Cocina(puerto);
 
-    signal(SIGINT, signalHandler);  // Para CTRL+C
+    signal(SIGINT, signalCerrarCocina);
 
-    cocinaPtr->iniciar();
+    cocinaPtr->abrirCocina();
 
-    std::cout << "[Main] Presione CTRL+C para apagar el servidor...\n";
+    cout << "[Main - Servidor] Presione CTRL+C para cerrar la cocina...\n";
     pause();
 
     delete cocinaPtr;

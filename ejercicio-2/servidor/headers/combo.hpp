@@ -1,13 +1,15 @@
 #pragma once
 #include <string>
 
+using namespace std;
+
 class Combo {
 private:
-    std::string tipo;
+    string tipo;
 
 public:
-    Combo(const std::string& tipoCombo);
+    Combo(const string& tipoCombo);
 
-    std::string getTipo() const;
-    std::string getDetalle() const;
+    string getTipo() const;
+    string getDetalle() const;
 };

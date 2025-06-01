@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../headers/json.hpp"
 #include <queue>
 #include <thread>
 #include <mutex>
@@ -8,32 +9,40 @@
 #include <atomic>
 #include <string>
 #include <netinet/in.h>
+#include <iostream>
+#include <unistd.h>
+#include <cstring>
+#include <arpa/inet.h>
+
+using namespace std;
+using nlohmann::json;
 
 struct Pedido {
-    int clienteSocket;  // Para enviar respuesta si se desea
-    std::string combo;
+    int clienteSocket;
+    string combo;
 };
 
 class Cocina {
 private:
     int puerto;
     int socketServidor;
-    std::atomic<bool> servidorActivo;
+    atomic<bool> servidorActivo;
 
-    std::queue<Pedido> colaPedidos;
-    std::mutex mutexCola;
-    std::condition_variable cvPedidos;
+    queue<Pedido> colaPedidos;
+    mutex mutexColaPedidos;
+    condition_variable cvPedidos; // receive bloqueante ->  espera que otro hilo lo despierte con una señal 
 
-    std::vector<std::thread> hilosCocineros;
-    std::thread hiloAceptador;
+    vector<thread> hilosCocineros;
+    thread hiloAceptador;
 
     void aceptarClientes();
     void cocineroLoop(int id);
+    void mostrarBienvenidaConsola();
 
 public:
     Cocina(int puerto);
     ~Cocina();
 
-    void iniciar();
-    void apagar();
+    void abrirCocina();
+    void cerrarCocina();
 };

@@ -2,19 +2,21 @@
 #include <string>
 #include <atomic>
 
+using namespace std;
+
 class Cliente {
 private:
-    std::string combo;     // Mover esto arriba
+    string combo;     // Mover esto arriba
     int socketCliente;
-    std::atomic<bool> conectado;
+    atomic<bool> conectado;
 
     void escucharServidor();  // Recibe y muestra mensajes del servidor
 
 public:
-    Cliente(const std::string& combo);
+    Cliente(const string& combo);
     ~Cliente();
 
-    bool conectar(const std::string& host, int puerto);
+    bool conectar(const string& host, int puerto);
     void enviarPedido();
     void iniciar();
     void cerrar();
