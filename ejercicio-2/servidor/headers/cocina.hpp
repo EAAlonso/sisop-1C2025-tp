@@ -20,6 +20,7 @@ using namespace std;
 using nlohmann::json;
 
 class Cocinero; // forward declaration
+extern mutex mutexLog;
 
 class Cocina {
 private:

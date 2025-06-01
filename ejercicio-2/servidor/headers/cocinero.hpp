@@ -8,11 +8,15 @@
 #include <iostream>
 #include <chrono>
 #include <iomanip>
+#include <fstream>
+#include <mutex>
 
 using namespace std;
 using namespace chrono;
 
 class Cocina; // forward declaration
+
+extern mutex mutexLog; 
 
 class Cocinero {
     public:
@@ -29,7 +33,7 @@ class Cocinero {
 
     private:
         void trabajar();
-        void logPedido(string) const;
+        void logPedido(const string&);
 
         int id;
         Cocina& cocina;

@@ -1,5 +1,7 @@
 #include "../headers/cocinero.hpp"
 
+mutex mutexLog;
+
 Cocinero::Cocinero(int id, Cocina& cocina) : id(id), cocina(cocina), activo(true) {}
 
 Cocinero::~Cocinero() {
@@ -18,64 +20,107 @@ void Cocinero::unirse() {
 }
 
 void Cocinero::trabajar() {
-    while (cocina.servidorActivo) {
-        Pedido pedido;
+    try {
+        while (true) {
+            Pedido pedido;
 
-        {
-            unique_lock<mutex> lock(cocina.mutexColaPedidos);
-            cocina.cvPedidos.wait(lock, [&]() {
-                return !cocina.colaPedidos.empty() || !cocina.servidorActivo;
-            });
+            {
+                unique_lock<mutex> lock(cocina.mutexColaPedidos);
+                cocina.cvPedidos.wait(lock, [&]() {
+                    return !cocina.colaPedidos.empty() || !cocina.servidorActivo;
+                });
 
-            if (!cocina.servidorActivo && cocina.colaPedidos.empty())
-                return;
+                if (!cocina.servidorActivo && cocina.colaPedidos.empty()) {
+                    logPedido("Nos vemoss 👋");
+                    return;
+                }
 
-            pedido = cocina.colaPedidos.front();
-            cocina.colaPedidos.pop();
-        }
+                pedido = cocina.colaPedidos.front();
+                cocina.colaPedidos.pop();
+            }
 
-        auto logPaso = [&](const string& mensaje) {
-            logPedido("Pedido #" + to_string(pedido.numeroPedido) + ": " + mensaje);
-        };
+            auto logPaso = [&](const string& mensaje) {
+                logPedido("Pedido #" + to_string(pedido.numeroPedido) + ": " + mensaje);
+            };
 
-        logPaso("\033[38;5;33mTomando pedido...\033[0m");
-        sleep(2);
+            logPaso("\033[38;5;33mTomando pedido...\033[0m");
+            sleep(2);
 
-        logPaso("\033[38;5;208mCocinando...\033[0m");
-        sleep(2);
+            logPaso("\033[38;5;208mCocinando...\033[0m");
+            sleep(2);
 
-        if (pedido.combo == "S") {
-            logPaso("\033[38;5;217mArmando COMBO S: \033[3m1 carne, 1 queso, 2 panes\033[0m");
+            if (pedido.combo == "S") {
+                logPaso("\033[38;5;217mArmando COMBO S: \033[3m1 carne, 1 queso, 2 panes\033[0m");
+                sleep(3);
+            } else if (pedido.combo == "D") {
+                logPaso("\033[38;5;210mArmando COMBO D: \033[3m2 carnes, 2 quesos, 3 panes\033[0m");
+                sleep(5);
+            } else {
+                logPaso("\033[38;5;203mArmando COMBO C: \033[3m2 carnes, 2 quesos, lechuga, tomate, 3 panes\033[0m");
+                sleep(7);
+            }
+
+            logPaso("\033[38;5;187mEmpaquetando...\033[0m");
             sleep(3);
-        } else if (pedido.combo == "D") {
-            logPaso("\033[38;5;210mArmando COMBO D: \033[3m2 carnes, 2 quesos, 3 panes\033[0m");
-            sleep(5);
-        } else {
-            logPaso("\033[38;5;203mArmando COMBO C: \033[3m2 carnes, 2 quesos, lechuga, tomate, 3 panes\033[0m");
-            sleep(7);
+
+            logPaso("\033[38;5;82mEntregado.\033[0m");
+            sleep(2);
+
+            if (pedido.clienteSocket != -1) {
+                close(pedido.clienteSocket);
+            }
         }
-
-        logPaso("\033[38;5;187mEmpaquetando...\033[0m");
-        sleep(3);
-
-        logPaso("\033[38;5;82mEntregado.\033[0m");
-        sleep(2);
-
-        if (pedido.clienteSocket != -1) {
-            close(pedido.clienteSocket);
-        }
+    } catch (const exception& e) {
+        cerr << "[Cocinero " << id << "] Error inesperado: " << e.what() << endl;
     }
 }
 
 
-void Cocinero::logPedido(string mensaje) const
-{
-    auto now = system_clock::now();
+string obtenerFechaActual() {
+    using namespace chrono;
 
-    time_t now_time = system_clock::to_time_t(now);
-    tm* tm_ptr = localtime(&now_time);
+    auto ahora = system_clock::now();
+    time_t tiempo = system_clock::to_time_t(ahora);
+    tm* tm_local = localtime(&tiempo);
 
-    cout << "[" << put_time(tm_ptr, "%H:%M:%S") << "] "
-         << "[Cocinero " << this->id << "] " << mensaje << endl;
-
+    ostringstream oss;
+    oss << put_time(tm_local, "%Y-%m-%d");  // Solo fecha
+    return oss.str();
 }
+
+void Cocinero::logPedido(const string& mensaje) {
+    try {
+        lock_guard<mutex> lock(mutexLog);
+
+        auto now = system_clock::now();
+        time_t now_time = system_clock::to_time_t(now);
+        setenv("TZ", "America/Argentina/Buenos_Aires", 1);
+        tzset();
+        tm* tm_ptr = localtime(&now_time);
+
+        stringstream headerStream;
+        headerStream << "[" << put_time(tm_ptr, "%H:%M:%S") << "] "
+                     << "[Cocinero " << this->id << "] ";
+
+        string encabezado = headerStream.str();
+
+        cout << encabezado << mensaje << endl;
+
+        string mensajeLimpio;
+        bool inEscape = false;
+        for (char c : mensaje) {
+            if (c == '\033') inEscape = true;
+            else if (inEscape && c == 'm') inEscape = false;
+            else if (!inEscape) mensajeLimpio += c;
+        }
+
+        string fileName = "logs_" + obtenerFechaActual() + ".txt";
+        ofstream archivo(fileName, ios::app);
+        if (archivo.is_open()) {
+            archivo << encabezado << mensajeLimpio << endl;
+        }
+    } catch (const system_error& e) {
+        cerr << "[Log] Error al escribir log: " << e.what() << endl;
+    }
+}
+
