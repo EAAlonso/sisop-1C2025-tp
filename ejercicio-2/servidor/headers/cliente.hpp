@@ -4,9 +4,8 @@
 
 class Cliente {
 private:
+    std::string combo;     // Mover esto arriba
     int socketCliente;
-    std::string combo;
-
     std::atomic<bool> conectado;
 
     void escucharServidor();  // Recibe y muestra mensajes del servidor
@@ -20,3 +19,4 @@ public:
     void iniciar();
     void cerrar();
 };
+

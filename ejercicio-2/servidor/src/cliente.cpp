@@ -80,8 +80,8 @@ void Cliente::iniciar() {
     std::thread escucha(&Cliente::escucharServidor, this);
 
     std::cout << "\n[Cliente] Presione ENTER para cerrar la conexión.\n";
-    std::cin.ignore();
-    std::cin.get();
+    std::cin.ignore(); // limpiar buffer
+    std::cin.get();    // esperar entrada
 
     cerrar();
     escucha.join();
