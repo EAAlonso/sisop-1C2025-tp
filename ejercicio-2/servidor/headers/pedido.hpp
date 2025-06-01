@@ -1,4 +1,10 @@
+#pragma once
+
+#include <string>
+
+using namespace std;
+
 struct Pedido {
-    int clienteSocket;
     string combo;
+    int clienteSocket;
 };

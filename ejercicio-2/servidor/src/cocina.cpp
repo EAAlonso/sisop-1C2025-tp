@@ -44,7 +44,9 @@ void Cocina::abrirCocina() {
     // creación de 5 hilos cocineros, cada uno ejecutando el método cocineroLoop(int id)
     // los cocineros toman pedidos y los procesan
     for (int i = 0; i < 5; ++i) {
-        hilosCocineros.emplace_back(&Cocina::cocineroLoop, this, i + 1);
+        auto cocinero = std::make_unique<Cocinero>(i + 1, *this);
+        cocinero->iniciar();
+        cocineros.push_back(std::move(cocinero));
     }
 
     // Lanzar hilo aceptador
@@ -89,51 +91,6 @@ void Cocina::aceptarClientes() {
     }
 }
 
-void Cocina::cocineroLoop(int id) {
-    while (servidorActivo) {
-        Pedido pedido;
-        {
-            unique_lock<mutex> lock(mutexColaPedidos);
-            cvPedidos.wait(lock, [&]() { return !colaPedidos.empty() || !servidorActivo; });
-
-            if (!servidorActivo && colaPedidos.empty()) return;
-
-            pedido = colaPedidos.front();
-            colaPedidos.pop();
-        }
-
-        auto logPaso = [&](const string& paso) {
-            cout << "[Cocinero " << id << "] " << paso << endl;
-        };
-
-        logPaso("Tomando pedido...");
-        sleep(2);
-
-        logPaso("Cocinando...");
-        sleep(2);
-
-        if (pedido.combo == "S") {
-            logPaso("Armando combo: 1 carne, 1 queso, 2 panes");
-            sleep(3);
-        } else if (pedido.combo == "D") {
-            logPaso("Armando combo: 2 carnes, 2 quesos, 3 panes");
-            sleep(5);
-        } else {
-            logPaso("Armando combo: 2 carnes, 2 quesos, lechuga, tomate");
-            sleep(7);
-        }
-
-        logPaso("Empaquetando...");
-        sleep(3);
-
-        logPaso("Entregado.");
-        sleep(2);
-
-        close(pedido.clienteSocket);
-    }
-}
-
-
 void Cocina::cerrarCocina() {
     servidorActivo = false;
     close(socketServidor);
@@ -141,8 +98,8 @@ void Cocina::cerrarCocina() {
 
     if (hiloAceptador.joinable()) hiloAceptador.join();
 
-    for (auto& hilo : hilosCocineros) {
-        if (hilo.joinable()) hilo.join();
+    for (auto& cocinero : cocineros) {
+        cocinero->unirse();
     }
 
     cout << "[Cocina] Apagado completo." << endl;

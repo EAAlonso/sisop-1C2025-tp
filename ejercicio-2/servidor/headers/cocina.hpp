@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../headers/json.hpp"
+#include "../headers/cocinero.hpp"
+#include "../headers/pedido.hpp"
 #include <queue>
 #include <thread>
 #include <mutex>
@@ -17,22 +19,14 @@
 using namespace std;
 using nlohmann::json;
 
-struct Pedido {
-    int clienteSocket;
-    string combo;
-};
+class Cocinero; // forward declaration
 
 class Cocina {
 private:
     int puerto;
     int socketServidor;
-    atomic<bool> servidorActivo;
 
-    queue<Pedido> colaPedidos;
-    mutex mutexColaPedidos;
-    condition_variable cvPedidos; // receive bloqueante ->  espera que otro hilo lo despierte con una señal 
-
-    vector<thread> hilosCocineros;
+    vector<unique_ptr<Cocinero>> cocineros;
     thread hiloAceptador;
 
     void aceptarClientes();
@@ -42,6 +36,11 @@ private:
 public:
     Cocina(int puerto);
     ~Cocina();
+    
+    atomic<bool> servidorActivo;
+    queue<Pedido> colaPedidos;
+    mutex mutexColaPedidos;
+    condition_variable cvPedidos; // receive bloqueante ->  espera que otro hilo lo despierte con una señal 
 
     void abrirCocina();
     void cerrarCocina();
