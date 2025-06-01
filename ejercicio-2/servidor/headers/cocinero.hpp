@@ -2,6 +2,7 @@
 
 #include "../headers/pedido.hpp"
 #include "../headers/cocina.hpp"
+#include "../headers/combo.hpp"
 #include <thread>
 #include <atomic>
 #include <unistd.h>

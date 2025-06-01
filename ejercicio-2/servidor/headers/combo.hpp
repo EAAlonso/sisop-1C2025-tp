@@ -6,10 +6,12 @@ using namespace std;
 class Combo {
 private:
     string tipo;
+    string getDetalle() const;
 
 public:
     Combo(const string& tipoCombo);
 
     string getTipo() const;
-    string getDetalle() const;
+    string getMensajeArmado() const;
+    int getTiempoArmado() const;
 };

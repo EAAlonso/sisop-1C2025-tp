@@ -49,16 +49,9 @@ void Cocinero::trabajar() {
             logPaso("\033[38;5;208mCocinando...\033[0m");
             sleep(2);
 
-            if (pedido.combo == "S") {
-                logPaso("\033[38;5;217mArmando COMBO S: \033[3m1 carne, 1 queso, 2 panes\033[0m");
-                sleep(3);
-            } else if (pedido.combo == "D") {
-                logPaso("\033[38;5;210mArmando COMBO D: \033[3m2 carnes, 2 quesos, 3 panes\033[0m");
-                sleep(5);
-            } else {
-                logPaso("\033[38;5;203mArmando COMBO C: \033[3m2 carnes, 2 quesos, lechuga, tomate, 3 panes\033[0m");
-                sleep(7);
-            }
+            Combo combo(pedido.combo);
+            logPaso(combo.getMensajeArmado());
+            sleep(combo.getTiempoArmado());
 
             logPaso("\033[38;5;187mEmpaquetando...\033[0m");
             sleep(3);
