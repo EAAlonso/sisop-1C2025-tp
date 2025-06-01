@@ -82,9 +82,9 @@ void Cocina::aceptarClientes() {
 
                     {
                         lock_guard<mutex> lock(mutexColaPedidos);
+                        pedido.numeroPedido = contadorPedidos++;
                         colaPedidos.push(pedido);
-                        ++contadorPedidos;
-                        std::cout << "[Cocina] Pedido #" << contadorPedidos << " recibido: " << pedido.combo << std::endl;
+                        std::cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << std::endl;
                     }
                     cvPedidos.notify_one();
                 }
@@ -95,9 +95,9 @@ void Cocina::aceptarClientes() {
 
                 {
                     lock_guard<mutex> lock(mutexColaPedidos);
+                    pedido.numeroPedido = contadorPedidos++;
                     colaPedidos.push(pedido);
-                    ++contadorPedidos;
-                    std::cout << "[Cocina] Pedido #" << contadorPedidos << " recibido: " << pedido.combo << std::endl;
+                    std::cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << std::endl;
                 }
                 cvPedidos.notify_one();
 
@@ -112,6 +112,7 @@ void Cocina::aceptarClientes() {
         }
     }
 }
+
 
 void Cocina::cerrarCocina() {
     servidorActivo = false;

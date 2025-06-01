@@ -34,32 +34,39 @@ void Cocinero::ejecutar() {
             cocina.colaPedidos.pop();
         }
 
-        logPedido("Tomando pedido...");
+        auto logPaso = [&](const std::string& mensaje) {
+            logPedido("Pedido #" + std::to_string(pedido.numeroPedido) + ": " + mensaje);
+        };
+
+        logPaso("\033[38;5;33mTomando pedido...\033[0m");
         sleep(2);
 
-        logPedido("Cocinando...");
+        logPaso("\033[38;5;208mCocinando...\033[0m");
         sleep(2);
 
         if (pedido.combo == "S") {
-            logPedido("Armando combo: 1 carne, 1 queso, 2 panes");
+            logPaso("\033[38;5;210mArmando COMBO S: \033[3m1 carne, 1 queso, 2 panes\033[0m");
             sleep(3);
         } else if (pedido.combo == "D") {
-            logPedido("Armando combo: 2 carnes, 2 quesos, 3 panes");
+            logPaso("\033[38;5;203mArmando COMBO D: \033[3m2 carnes, 2 quesos, 3 panes\033[0m");
             sleep(5);
         } else {
-            logPedido("Armando combo: 2 carnes, 2 quesos, lechuga, tomate");
+            logPaso("\033[38;5;217mArmando COMBO C: \033[3m2 carnes, 2 quesos, lechuga, tomate\033[0m");
             sleep(7);
         }
 
-        logPedido("Empaquetando...");
+        logPaso("\033[38;5;179mEmpaquetando...\033[0m");
         sleep(3);
 
-        logPedido("Entregado.");
+        logPaso("\033[38;5;82mEntregado.\033[0m");
         sleep(2);
 
-        close(pedido.clienteSocket);
+        if (pedido.clienteSocket != -1) {
+            close(pedido.clienteSocket);
+        }
     }
 }
+
 
 void Cocinero::logPedido(string mensaje) const
 {
