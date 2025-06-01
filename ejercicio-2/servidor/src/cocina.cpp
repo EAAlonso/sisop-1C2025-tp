@@ -34,9 +34,9 @@ void Cocina::abrirCocina() {
     Cocina::mostrarBienvenidaConsola();
 
     for (int i = 0; i < 5; ++i) {
-        auto cocinero = std::make_unique<Cocinero>(i + 1, *this);
+        auto cocinero = make_unique<Cocinero>(i + 1, *this);
         cocinero->iniciar();
-        cocineros.push_back(std::move(cocinero));
+        cocineros.push_back(move(cocinero));
     }
 
     hiloAceptador = thread(&Cocina::aceptarClientes, this);
@@ -54,24 +54,24 @@ void Cocina::aceptarClientes() {
 
         char ipCliente[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &direccionCliente.sin_addr, ipCliente, INET_ADDRSTRLEN);
-        std::cout << "[Cocina] Conexión aceptada desde: " << ipCliente << std::endl;
+        cout << "[Cocina] Conexión aceptada desde: " << ipCliente << endl;
 
         char buffer[1024] = {0};
         ssize_t bytes = recv(socketCliente, buffer, sizeof(buffer) - 1, 0);
         if (bytes <= 0) {
-            std::cout << "[Cocina] Cliente desconectado sin enviar datos." << std::endl;
+            cout << "[Cocina] Cliente desconectado sin enviar datos." << endl;
             close(socketCliente);
             continue;
         }
 
         buffer[bytes] = '\0';
-        std::cout << "[Cocina] Mensaje recibido (crudo): " << buffer << std::endl;
+        cout << "[Cocina] Mensaje recibido (crudo): " << buffer << endl;
 
         try {
             json pedidoJson = json::parse(buffer);
 
             if (pedidoJson.value("tipo", "") == "batch") {
-                std::string respuesta = "Batch recibido: " + std::to_string(pedidoJson["pedidos"].size()) + " pedidos\n";
+                string respuesta = "Batch recibido: " + to_string(pedidoJson["pedidos"].size()) + " pedidos\n";
                 send(socketCliente, respuesta.c_str(), respuesta.size(), 0);
                 close(socketCliente);
 
@@ -84,7 +84,7 @@ void Cocina::aceptarClientes() {
                         lock_guard<mutex> lock(mutexColaPedidos);
                         pedido.numeroPedido = contadorPedidos++;
                         colaPedidos.push(pedido);
-                        std::cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << std::endl;
+                        cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << endl;
                     }
                     cvPedidos.notify_one();
                 }
@@ -97,16 +97,16 @@ void Cocina::aceptarClientes() {
                     lock_guard<mutex> lock(mutexColaPedidos);
                     pedido.numeroPedido = contadorPedidos++;
                     colaPedidos.push(pedido);
-                    std::cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << std::endl;
+                    cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << endl;
                 }
                 cvPedidos.notify_one();
 
-                std::string respuesta = "Pedido recibido\n";
+                string respuesta = "Pedido recibido\n";
                 send(socketCliente, respuesta.c_str(), respuesta.size(), 0);
             }
         } catch (...) {
-            std::cerr << "[Cocina] Error al parsear JSON del cliente." << std::endl;
-            std::string errorMsg = "Error: JSON inválido\n";
+            cerr << "[Cocina] Error al parsear JSON del cliente." << endl;
+            string errorMsg = "Error: JSON inválido\n";
             send(socketCliente, errorMsg.c_str(), errorMsg.size(), 0);
             close(socketCliente);
         }

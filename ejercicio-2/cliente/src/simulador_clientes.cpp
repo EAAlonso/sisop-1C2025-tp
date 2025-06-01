@@ -1,16 +1,11 @@
 #include "../headers/simulador_clientes.hpp"
-#include "../headers/json.hpp"
-#include <fstream>
-#include <iostream>
-#include <arpa/inet.h>
-#include <unistd.h>
 
 using nlohmann::json;
 
-void simularClientesDesdeArchivo(const std::string& archivo, int puerto, const std::string host) {
-    std::ifstream file(archivo);
+void simularClientesDesdeArchivo(const string& archivo, int puerto, const string host) {
+    ifstream file(archivo);
     if (!file.is_open()) {
-        std::cerr << "No se pudo abrir el archivo: " << archivo << std::endl;
+        cerr << "No se pudo abrir el archivo: " << archivo << endl;
         return;
     }
 
@@ -18,19 +13,19 @@ void simularClientesDesdeArchivo(const std::string& archivo, int puerto, const s
     batch["tipo"] = "batch";
     batch["pedidos"] = json::array();
 
-    std::string linea;
-    while (std::getline(file, linea)) {
+    string linea;
+    while (getline(file, linea)) {
         if (linea.empty()) continue;
         batch["pedidos"].push_back({ {"combo", linea} });
     }
 
-    std::string mensaje = batch.dump() + "\n";
+    string mensaje = batch.dump() + "\n";
     file.close();
 
     // Enviar batch al servidor
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
-        std::cerr << "[-] Error al crear socket para batch" << std::endl;
+        cerr << "[-] Error al crear socket para batch" << endl;
         return;
     }
 
@@ -38,13 +33,13 @@ void simularClientesDesdeArchivo(const std::string& archivo, int puerto, const s
     servidor.sin_family = AF_INET;
     servidor.sin_port = htons(puerto);
     if (inet_pton(AF_INET, host.c_str(), &servidor.sin_addr) <= 0) {
-        std::cerr << "[-] Dirección IP inválida: " << host << std::endl;
+        cerr << "[-] Dirección IP inválida: " << host << endl;
         close(sock);
         return;
     }
 
     if (connect(sock, (struct sockaddr*)&servidor, sizeof(servidor)) < 0) {
-        std::cerr << "[-] No se pudo conectar al servidor" << std::endl;
+        cerr << "[-] ¡La hamburgueseria Fork & Burger está cerrada! (No se pudo conectar al servidor)" << endl;
         close(sock);
         return;
     }
@@ -56,9 +51,9 @@ void simularClientesDesdeArchivo(const std::string& archivo, int puerto, const s
     ssize_t bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
     if (bytes > 0) {
         buffer[bytes] = '\0';
-        std::cout << "Respuesta del servidor: " << buffer << std::endl;
+        cout << "Respuesta del servidor: " << buffer << endl;
     }
 
-    std::cout << "[✓] Pedidos enviados: " << batch["pedidos"].size() << std::endl;
+    cout << "[✓] Pedidos enviados: " << batch["pedidos"].size() << endl;
     close(sock);
 }
