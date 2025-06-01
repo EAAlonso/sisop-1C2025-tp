@@ -44,4 +44,5 @@ public:
 
     void abrirCocina();
     void cerrarCocina();
+    int contadorPedidos = 1;
 };

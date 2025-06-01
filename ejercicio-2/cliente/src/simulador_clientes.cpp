@@ -8,47 +8,57 @@
 using nlohmann::json;
 
 void simularClientesDesdeArchivo(const std::string& archivo, int puerto, const std::string host) {
-
     std::ifstream file(archivo);
     if (!file.is_open()) {
         std::cerr << "No se pudo abrir el archivo: " << archivo << std::endl;
         return;
     }
 
+    json batch;
+    batch["tipo"] = "batch";
+    batch["pedidos"] = json::array();
+
     std::string linea;
-    int contador = 1;
     while (std::getline(file, linea)) {
         if (linea.empty()) continue;
-
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock < 0) {
-            std::cerr << "[-] Error al crear socket para pedido " << contador << std::endl;
-            continue;
-        }
-
-        sockaddr_in servidor{};
-        servidor.sin_family = AF_INET;
-        servidor.sin_port = htons(puerto);
-        inet_pton(AF_INET, host.c_str(), &servidor.sin_addr);
-
-        if (connect(sock, (struct sockaddr*)&servidor, sizeof(servidor)) < 0) {
-            std::cerr << "[-] No se pudo conectar para pedido " << contador << std::endl;
-            close(sock);
-            continue;
-        }
-
-        json pedido;
-        pedido["tipo"] = "pedido";
-        pedido["combo"] = linea;
-
-        std::string mensaje = pedido.dump() + "\n";
-        send(sock, mensaje.c_str(), mensaje.size(), 0);
-
-        std::cout << "[✓] Pedido " << contador << " enviado: " << mensaje;
-
-        close(sock);
-        contador++;
+        batch["pedidos"].push_back({ {"combo", linea} });
     }
 
+    std::string mensaje = batch.dump() + "\n";
     file.close();
+
+    // Enviar batch al servidor
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        std::cerr << "[-] Error al crear socket para batch" << std::endl;
+        return;
+    }
+
+    sockaddr_in servidor{};
+    servidor.sin_family = AF_INET;
+    servidor.sin_port = htons(puerto);
+    if (inet_pton(AF_INET, host.c_str(), &servidor.sin_addr) <= 0) {
+        std::cerr << "[-] Dirección IP inválida: " << host << std::endl;
+        close(sock);
+        return;
+    }
+
+    if (connect(sock, (struct sockaddr*)&servidor, sizeof(servidor)) < 0) {
+        std::cerr << "[-] No se pudo conectar al servidor" << std::endl;
+        close(sock);
+        return;
+    }
+
+    send(sock, mensaje.c_str(), mensaje.size(), 0);
+
+    // Leer respuesta del servidor
+    char buffer[1024] = {0};
+    ssize_t bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+    if (bytes > 0) {
+        buffer[bytes] = '\0';
+        std::cout << "Respuesta del servidor: " << buffer << std::endl;
+    }
+
+    std::cout << "[✓] Pedidos enviados: " << batch["pedidos"].size() << std::endl;
+    close(sock);
 }

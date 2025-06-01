@@ -7,49 +7,38 @@ Cocina::~Cocina() {
 }
 
 void Cocina::abrirCocina() {
-    socketServidor = socket(AF_INET, SOCK_STREAM, 0); // creación de socket TCP (sock_stream) para IPv4 (af_inet)
-    if (socketServidor < 0) 
-    {
+    socketServidor = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketServidor < 0) {
         perror("Error al crear socket");
         exit(EXIT_FAILURE);
     }
 
     int opt = 1;
-    setsockopt(socketServidor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); // permite reutilizar el puerto rápidamente tras reiniciar el servidor
-                                                                             // sino el SO le pone un time_wait y demora minutos para liberar el socket
-                                                                             // y aparece un error 'Address already in use'
+    setsockopt(socketServidor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    // preparación del servidor
     sockaddr_in direccionServidor{};
     direccionServidor.sin_family = AF_INET;
     direccionServidor.sin_addr.s_addr = INADDR_ANY;
     direccionServidor.sin_port = htons(puerto);
 
-    if (bind(socketServidor, (struct sockaddr*)&direccionServidor, sizeof(direccionServidor)) < 0) // asocia el socket a esa dirección IP y puerto.
-    { 
+    if (bind(socketServidor, (struct sockaddr*)&direccionServidor, sizeof(direccionServidor)) < 0) {
         perror("Error en bind");
         exit(EXIT_FAILURE);
     }
 
-    // empieza a escuchar conexiones entrantes (clientes que se conectan a este socket)
-    // hasta 10 en espera (backlog de conexiones no aceptadas aún)
-    if (listen(socketServidor, 10) < 0) 
-    {
+    if (listen(socketServidor, 10) < 0) {
         perror("Error en listen");
         exit(EXIT_FAILURE);
     }
 
     Cocina::mostrarBienvenidaConsola();
 
-    // creación de 5 hilos cocineros, cada uno ejecutando el método cocineroLoop(int id)
-    // los cocineros toman pedidos y los procesan
     for (int i = 0; i < 5; ++i) {
         auto cocinero = std::make_unique<Cocinero>(i + 1, *this);
         cocinero->iniciar();
         cocineros.push_back(std::move(cocinero));
     }
 
-    // Lanzar hilo aceptador
     hiloAceptador = thread(&Cocina::aceptarClientes, this);
 }
 
@@ -63,29 +52,62 @@ void Cocina::aceptarClientes() {
             continue;
         }
 
+        char ipCliente[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &direccionCliente.sin_addr, ipCliente, INET_ADDRSTRLEN);
+        std::cout << "[Cocina] Conexión aceptada desde: " << ipCliente << std::endl;
+
         char buffer[1024] = {0};
         ssize_t bytes = recv(socketCliente, buffer, sizeof(buffer) - 1, 0);
         if (bytes <= 0) {
+            std::cout << "[Cocina] Cliente desconectado sin enviar datos." << std::endl;
             close(socketCliente);
             continue;
         }
 
+        buffer[bytes] = '\0';
+        std::cout << "[Cocina] Mensaje recibido (crudo): " << buffer << std::endl;
+
         try {
             json pedidoJson = json::parse(buffer);
-            Pedido pedido;
-            pedido.combo = pedidoJson.value("combo", "");
-            pedido.clienteSocket = socketCliente;
 
-            {
-                lock_guard<mutex> lock(mutexColaPedidos);
-                colaPedidos.push(pedido);
+            if (pedidoJson.value("tipo", "") == "batch") {
+                std::string respuesta = "Batch recibido: " + std::to_string(pedidoJson["pedidos"].size()) + " pedidos\n";
+                send(socketCliente, respuesta.c_str(), respuesta.size(), 0);
+                close(socketCliente);
+
+                for (auto& p : pedidoJson["pedidos"]) {
+                    Pedido pedido;
+                    pedido.combo = p.value("combo", "");
+                    pedido.clienteSocket = -1;
+
+                    {
+                        lock_guard<mutex> lock(mutexColaPedidos);
+                        colaPedidos.push(pedido);
+                        ++contadorPedidos;
+                        std::cout << "[Cocina] Pedido #" << contadorPedidos << " recibido: " << pedido.combo << std::endl;
+                    }
+                    cvPedidos.notify_one();
+                }
+            } else {
+                Pedido pedido;
+                pedido.combo = pedidoJson.value("combo", "");
+                pedido.clienteSocket = socketCliente;
+
+                {
+                    lock_guard<mutex> lock(mutexColaPedidos);
+                    colaPedidos.push(pedido);
+                    ++contadorPedidos;
+                    std::cout << "[Cocina] Pedido #" << contadorPedidos << " recibido: " << pedido.combo << std::endl;
+                }
+                cvPedidos.notify_one();
+
+                std::string respuesta = "Pedido recibido\n";
+                send(socketCliente, respuesta.c_str(), respuesta.size(), 0);
             }
-            cvPedidos.notify_one();
-
-            cout << "[Cocina] Pedido recibido: " << pedido.combo << endl;
-
         } catch (...) {
-            cerr << "[Cocina] Error al parsear JSON del cliente." << endl;
+            std::cerr << "[Cocina] Error al parsear JSON del cliente." << std::endl;
+            std::string errorMsg = "Error: JSON inválido\n";
+            send(socketCliente, errorMsg.c_str(), errorMsg.size(), 0);
             close(socketCliente);
         }
     }
@@ -105,11 +127,10 @@ void Cocina::cerrarCocina() {
     cout << "[Cocina] Apagado completo." << endl;
 }
 
-void Cocina::mostrarBienvenidaConsola() 
-{
+void Cocina::mostrarBienvenidaConsola() {
     cout << endl;
     cout << "\033[38;5;179m---------------------------------------" << endl;
-    cout << "¡¡¡ Fork & Burger abrió sus puertas !!!\033[0m (Servidor escuchando en puerto " << puerto << ")" <<endl;
+    cout << "¡¡¡ Fork & Burger abrió sus puertas !!!\033[0m (Servidor escuchando en puerto " << puerto << ")" << endl;
     cout << "\033[38;5;179m---------------------------------------\033[0m" << endl;
     cout << endl;
     cout << "\033[38;5;179m        █████████        \033[0m\n";
@@ -119,5 +140,4 @@ void Cocina::mostrarBienvenidaConsola()
     cout << "\033[38;5;88m      █████████████      \033[0m\n";
     cout << "\033[38;5;179m        █████████        \033[0m\n";
     cout << endl;
-
 }
