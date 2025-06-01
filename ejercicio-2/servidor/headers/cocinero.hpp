@@ -6,28 +6,33 @@
 #include <atomic>
 #include <unistd.h>
 #include <iostream>
+#include <chrono>
+#include <iomanip>
 
 using namespace std;
+using namespace chrono;
+
 class Cocina; // forward declaration
 
 class Cocinero {
-public:
-    Cocinero(int id, Cocina& cocina);
-    ~Cocinero();
+    public:
+        Cocinero(int id, Cocina& cocina);
+        ~Cocinero();
 
-    Cocinero(const Cocinero&) = delete;
-    Cocinero& operator=(const Cocinero&) = delete;
-    Cocinero(Cocinero&&) noexcept = default;
-    Cocinero& operator=(Cocinero&&) noexcept = default;
+        Cocinero(const Cocinero&) = delete;
+        Cocinero& operator=(const Cocinero&) = delete;
+        Cocinero(Cocinero&&) noexcept = default;
+        Cocinero& operator=(Cocinero&&) noexcept = default;
 
-    void iniciar();
-    void unirse();
+        void iniciar();
+        void unirse();
 
-private:
-    void ejecutar();
+    private:
+        void ejecutar();
+        void logPedido(string) const;
 
-    int id;
-    Cocina& cocina;
-    thread hilo;
-    atomic<bool> activo;
+        int id;
+        Cocina& cocina;
+        thread hilo;
+        atomic<bool> activo;
 };

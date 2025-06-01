@@ -1,6 +1,7 @@
 #include "../headers/simulador_clientes.hpp"
 
 int main() {
-    simularClientesDesdeArchivo("../pedidos.txt", "127.0.0.1", 8080);
+    std::string host = "190.173.130.240";
+    simularClientesDesdeArchivo("./pedidos.txt", 8080, host);
     return 0;
 }

@@ -34,33 +34,41 @@ void Cocinero::ejecutar() {
             cocina.colaPedidos.pop();
         }
 
-        auto logPaso = [&](const string& paso) {
-            cout << "[Cocinero " << id << "] " << paso << endl;
-        };
-
-        logPaso("Tomando pedido...");
+        logPedido("Tomando pedido...");
         sleep(2);
 
-        logPaso("Cocinando...");
+        logPedido("Cocinando...");
         sleep(2);
 
         if (pedido.combo == "S") {
-            logPaso("Armando combo: 1 carne, 1 queso, 2 panes");
+            logPedido("Armando combo: 1 carne, 1 queso, 2 panes");
             sleep(3);
         } else if (pedido.combo == "D") {
-            logPaso("Armando combo: 2 carnes, 2 quesos, 3 panes");
+            logPedido("Armando combo: 2 carnes, 2 quesos, 3 panes");
             sleep(5);
         } else {
-            logPaso("Armando combo: 2 carnes, 2 quesos, lechuga, tomate");
+            logPedido("Armando combo: 2 carnes, 2 quesos, lechuga, tomate");
             sleep(7);
         }
 
-        logPaso("Empaquetando...");
+        logPedido("Empaquetando...");
         sleep(3);
 
-        logPaso("Entregado.");
+        logPedido("Entregado.");
         sleep(2);
 
         close(pedido.clienteSocket);
     }
+}
+
+void Cocinero::logPedido(string mensaje) const
+{
+    auto now = system_clock::now();
+
+    time_t now_time = system_clock::to_time_t(now);
+    tm* tm_ptr = localtime(&now_time);
+
+    cout << "[" << put_time(tm_ptr, "%H:%M:%S") << "] "
+         << "[Cocinero " << this->id << "] " << mensaje << endl;
+
 }

@@ -1,4 +1,4 @@
 #pragma once
 #include <string>
 
-void simularClientesDesdeArchivo(const std::string& archivo, const std::string& host, int puerto);
+void simularClientesDesdeArchivo(const std::string& archivo, int puerto, const std::string host);

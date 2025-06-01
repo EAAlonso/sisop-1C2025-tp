@@ -7,7 +7,8 @@
 
 using nlohmann::json;
 
-void simularClientesDesdeArchivo(const std::string& archivo, const std::string& host, int puerto) {
+void simularClientesDesdeArchivo(const std::string& archivo, int puerto, const std::string host) {
+
     std::ifstream file(archivo);
     if (!file.is_open()) {
         std::cerr << "No se pudo abrir el archivo: " << archivo << std::endl;
