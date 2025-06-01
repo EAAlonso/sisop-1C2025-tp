@@ -7,7 +7,7 @@ Cocinero::~Cocinero() {
 }
 
 void Cocinero::iniciar() {
-    hilo = thread(&Cocinero::ejecutar, this);
+    hilo = thread(&Cocinero::trabajar, this);
 }
 
 void Cocinero::unirse() {
@@ -17,7 +17,7 @@ void Cocinero::unirse() {
     }
 }
 
-void Cocinero::ejecutar() {
+void Cocinero::trabajar() {
     while (cocina.servidorActivo) {
         Pedido pedido;
 

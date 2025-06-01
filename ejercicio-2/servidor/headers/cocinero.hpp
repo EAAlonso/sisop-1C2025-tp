@@ -28,7 +28,7 @@ class Cocinero {
         void unirse();
 
     private:
-        void ejecutar();
+        void trabajar();
         void logPedido(string) const;
 
         int id;
