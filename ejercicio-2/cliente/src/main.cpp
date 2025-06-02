@@ -9,23 +9,34 @@ int main() {
     int puerto = 8080;
     while (true) {
         cout << "\n--- Menú Cliente ---\n";
-        cout << "1. Mandar pedidos del archivo\n";
-        cout << "2. Salir\n";
+        cout << "1. Pedir combo simple\n";
+        cout << "2. Pedir combo doble\n";
+        cout << "3. Pedir combo completo\n";
+        cout << "4. Salir\n";
         cout << "Seleccione una opción: ";
 
         int opcion;
         cin >> opcion;
 
-        if (opcion == 1) {
-            simularClientesDesdeArchivo("./pedidos.txt", puerto, host);
-        } else if (opcion == 2) {
-            cout << "Saliendo del cliente...\n";
+        switch(opcion)
+        {
+            case 1:
+                simularClientesDesdeArchivo("./pedidosComboS.txt", puerto, host);
             break;
-        } else {
-            cout << "Opción inválida, intente nuevamente.\n";
+            case 2:
+                simularClientesDesdeArchivo("./pedidosComboD.txt", puerto, host);
+            break;
+            case 3:
+                simularClientesDesdeArchivo("./pedidosComboC.txt", puerto, host);
+            break;
+            case 4:
+                cout << "Saliendo del cliente...\n";
+            break;
+            default:
+                cout << "Opción inválida, intente nuevamente.\n";
+            break;
         }
     }
 
-    return 0;
     return 0;
 }
