@@ -1,11 +1,8 @@
 #include "../headers/menu.hpp"
 #include <limits>
 
-Menu::Menu() {
-    pedido = Pedido();
-
-    // Constructor should only initialize the object
-    // You can initialize variables or set up the state here if needed
+Menu::Menu(ManagerPedidos *managerPedidos) {
+    this->managerPedidos = managerPedidos;
 }
 
 void Menu::Mostrar() {
@@ -59,7 +56,7 @@ void Menu::seleccionarCombo() {
         return;
     }
 
-    pedido.CrearPedido(opcion);
+    managerPedidos->CrearPedido(opcion);
 }
 
 void Menu::mostrarOpcionesCombos() {

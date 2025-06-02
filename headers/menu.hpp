@@ -2,22 +2,25 @@
 
 #include <iostream>
 #include <string>
-#include "pedido.hpp"
+#include "managerPedidos.hpp"
 
 #define SEPARATOR "----------------------------------------\n"
 
 using namespace std;
 
-class Menu {
-    private:
-        Pedido pedido;
-        void mostrarTitulo(); 
-        void mostrarMenu();
-        void seleccionarCombo();
-        void mostrarOpcionesCombos();
-        
-    public:
-        Menu();
-        void Mostrar();
-        void EsperarAccion();
-}; 
+class Menu
+{
+public:
+    Menu();
+    Menu(ManagerPedidos *managerPedidos);
+
+    void Mostrar();
+    static void EsperarAccion();
+
+private:
+    void mostrarTitulo();
+    void mostrarMenu();
+    void seleccionarCombo();
+    void mostrarOpcionesCombos();
+    ManagerPedidos *managerPedidos;
+};

@@ -1,12 +1,15 @@
 #pragma once
 
-enum class EstadoPedido {
+enum EstadoPedido {
     PENDIENTE,
-    EN_PROCESO,
-    TERMINADO
+    RECIBIDO,
+    COCINADO,
+    ARMADO,
+    EMPAQUETADO,
+    ENTREGADO
 };
 
-enum class TipoCombo {
+enum TipoCombo {
     SIMPLE = 0,
     DOBLE = 1,
     COMPLETO = 2
