@@ -52,43 +52,37 @@ void Cocina::aceptarClientes() {
             continue;
         }
 
-        char ipCliente[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &direccionCliente.sin_addr, ipCliente, INET_ADDRSTRLEN);
-        cout << "[Cocina] Conexión aceptada desde: " << ipCliente << endl;
-
-        char buffer[1024] = {0};
-        ssize_t bytes = recv(socketCliente, buffer, sizeof(buffer) - 1, 0);
-        if (bytes <= 0) {
-            cout << "[Cocina] Cliente desconectado sin enviar datos." << endl;
-            close(socketCliente);
-            continue;
+        // 🔐 CONTROL DE LÍMITE DE CLIENTES
+        {
+            std::unique_lock<std::mutex> lock(mutexClientes);
+            if (clientesActivos >= MAX_CLIENTES) {
+                cout << "[Cocina] Límite de clientes alcanzado. Rechazando conexión." << endl;
+                close(socketCliente);  // ❗ RECHAZAR AL TOQUE
+                continue;
+            }
+            clientesActivos++;
         }
 
-        buffer[bytes] = '\0';
-        cout << "[Cocina] Mensaje recibido (crudo): " << buffer << endl;
+        std::thread([this, socketCliente, direccionCliente]() {
+            char ipCliente[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &direccionCliente.sin_addr, ipCliente, INET_ADDRSTRLEN);
+            cout << "[Cocina] Conexión aceptada desde: " << ipCliente << endl;
 
-        try {
-            json pedidoJson = json::parse(buffer);
-
-            if (pedidoJson.value("tipo", "") == "batch") {
-                string respuesta = "Batch recibido: " + to_string(pedidoJson["pedidos"].size()) + " pedidos\n";
-                send(socketCliente, respuesta.c_str(), respuesta.size(), 0);
+            char buffer[1024] = {0};
+            ssize_t bytes = recv(socketCliente, buffer, sizeof(buffer) - 1, 0);
+            if (bytes <= 0) {
+                cout << "[Cocina] Cliente desconectado sin enviar datos." << endl;
                 close(socketCliente);
+                liberarCliente(); 
+                return;
+            }
 
-                for (auto& p : pedidoJson["pedidos"]) {
-                    Pedido pedido;
-                    pedido.combo = p.value("combo", "");
-                    pedido.clienteSocket = -1;
+            buffer[bytes] = '\0';
+            cout << "[Cocina] Mensaje recibido (crudo): " << buffer << endl;
 
-                    {
-                        lock_guard<mutex> lock(mutexColaPedidos);
-                        pedido.numeroPedido = contadorPedidos++;
-                        colaPedidos.push(pedido);
-                        cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << endl;
-                    }
-                    cvPedidos.notify_one();
-                }
-            } else {
+            try {
+                json pedidoJson = json::parse(buffer);
+
                 Pedido pedido;
                 pedido.combo = pedidoJson.value("combo", "");
                 pedido.clienteSocket = socketCliente;
@@ -99,20 +93,31 @@ void Cocina::aceptarClientes() {
                     colaPedidos.push(pedido);
                     cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << endl;
                 }
+
                 cvPedidos.notify_one();
 
-                string respuesta = "Pedido recibido\n";
-                send(socketCliente, respuesta.c_str(), respuesta.size(), 0);
+            } catch (...) {
+                cerr << "[Cocina] Error al parsear JSON del cliente." << endl;
+                string errorMsg = "Error: JSON inválido\n";
+                send(socketCliente, errorMsg.c_str(), errorMsg.size(), 0);
+                close(socketCliente);
+                liberarCliente();
+                return;
             }
-        } catch (...) {
-            cerr << "[Cocina] Error al parsear JSON del cliente." << endl;
-            string errorMsg = "Error: JSON inválido\n";
-            send(socketCliente, errorMsg.c_str(), errorMsg.size(), 0);
-            close(socketCliente);
-        }
+
+            // 💬 El socket se cierra cuando el cocinero termina el pedido
+            // liberarCliente() también lo llamás ahí
+        }).detach();
     }
 }
 
+
+
+void Cocina::liberarCliente() {
+    std::lock_guard<std::mutex> lock(mutexClientes);
+    clientesActivos--;
+    cvClientes.notify_one();
+}
 
 void Cocina::cerrarCocina() {
     servidorActivo = false;

@@ -28,6 +28,7 @@ int main() {
 
     cocinaPtr->cerrarCocina();
     
+    printf("paso por aca y rompio???");
     delete cocinaPtr;
     return 0;
 }

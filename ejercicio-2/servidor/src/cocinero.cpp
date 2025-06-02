@@ -61,6 +61,7 @@ void Cocinero::trabajar() {
 
             if (pedido.clienteSocket != -1) {
                 close(pedido.clienteSocket);
+                cocina.liberarCliente();
             }
         }
     } catch (const exception& e) {

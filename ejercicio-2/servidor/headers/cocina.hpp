@@ -45,5 +45,11 @@ public:
 
     void abrirCocina();
     void cerrarCocina();
+    void liberarCliente();
     int contadorPedidos = 1;
+
+    int clientesActivos = 0;
+    const int MAX_CLIENTES = 3;
+    mutex mutexClientes;
+    condition_variable cvClientes;
 };

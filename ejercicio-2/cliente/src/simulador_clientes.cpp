@@ -2,30 +2,10 @@
 
 using nlohmann::json;
 
-void simularClientesDesdeArchivo(const string& archivo, int puerto, const string host) {
-    ifstream file(archivo);
-    if (!file.is_open()) {
-        cerr << "No se pudo abrir el archivo: " << archivo << endl;
-        return;
-    }
-
-    json batch;
-    batch["tipo"] = "batch";
-    batch["pedidos"] = json::array();
-
-    string linea;
-    while (getline(file, linea)) {
-        if (linea.empty()) continue;
-        batch["pedidos"].push_back({ {"combo", linea} });
-    }
-
-    string mensaje = batch.dump() + "\n";
-    file.close();
-
-    // Enviar batch al servidor
+void clienteEscuchador(const string& combo, int puerto, const string& host) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
-        cerr << "[-] Error al crear socket para batch" << endl;
+        cerr << "[Cliente] Error al crear socket" << endl;
         return;
     }
 
@@ -33,27 +13,62 @@ void simularClientesDesdeArchivo(const string& archivo, int puerto, const string
     servidor.sin_family = AF_INET;
     servidor.sin_port = htons(puerto);
     if (inet_pton(AF_INET, host.c_str(), &servidor.sin_addr) <= 0) {
-        cerr << "[-] Dirección IP inválida: " << host << endl;
+        cerr << "[Cliente] Dirección IP inválida: " << host << endl;
         close(sock);
         return;
     }
 
     if (connect(sock, (struct sockaddr*)&servidor, sizeof(servidor)) < 0) {
-        cerr << "[-] ¡La hamburgueseria Fork & Burger está cerrada! (No se pudo conectar al servidor)" << endl;
+        cerr << "[Cliente] No se pudo conectar al servidor" << endl;
         close(sock);
         return;
     }
 
+    // Armar y enviar JSON con el combo
+    json pedidoJson;
+    pedidoJson["combo"] = combo;
+    string mensaje = pedidoJson.dump();
+
+    cout << "[Cliente] Enviando pedido: " << combo << endl;
     send(sock, mensaje.c_str(), mensaje.size(), 0);
 
-    // Leer respuesta del servidor
-    char buffer[1024] = {0};
-    ssize_t bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
-    if (bytes > 0) {
+    // Escuchar hasta que el servidor cierre la conexión
+    char buffer[1024];
+    while (true) {
+        ssize_t bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+        if (bytes <= 0) {
+            cout << "[Cliente] Conexión cerrada por el servidor.\n";
+            break;
+        }
         buffer[bytes] = '\0';
-        cout << "Respuesta del servidor: " << buffer << endl;
+        cout << "[Cliente] " << buffer;
     }
 
-    cout << "[✓] Pedidos enviados: " << batch["pedidos"].size() << endl;
     close(sock);
+}
+
+
+
+void simularClientesDesdeArchivo(const string& archivo, int puerto, const string& host)
+{
+    ifstream file(archivo);
+    if (!file.is_open()) {
+        cerr << "No se pudo abrir el archivo: " << archivo << endl;
+        return;
+    }
+
+    vector<thread> threads;
+    string combo;
+
+    while (getline(file, combo)) {
+        if (combo.empty()) continue;
+        threads.emplace_back(clienteEscuchador, combo, puerto, host);
+        this_thread::sleep_for(chrono::milliseconds(200));  // le da respiro al server
+    }
+
+    for (auto& t : threads) {
+        if (t.joinable()) t.join();
+    }
+
+    cout << "[✓] Todos los pedidos fueron enviados y escuchados.\n";
 }
