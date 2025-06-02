@@ -1,10 +1,18 @@
 #include "../headers/cocina.hpp"
-#include <functional>
 #include <fstream>
 #include <ctime>
 #include <sstream>
+#include <csignal>
 
-void Cocina::LlamarCocineros() {
+volatile sig_atomic_t terminar = 0;
+
+void handler_sigterm(int)
+{
+    terminar = 1;
+}
+
+void Cocina::LlamarCocineros()
+{
     const int _cantidadCocineros = 5;
     cout << "Llamando a " << _cantidadCocineros << " cocineros..." << endl;
 
@@ -14,40 +22,49 @@ void Cocina::LlamarCocineros() {
     auto armado = [this]() { ArmarPedidos(); };
     auto empaque = [this]() { EmpaquetarPedidos(); };
     auto entrega = [this]() { EntregarPedidos(); };
-    
 
     // Vector de punteros a funciones
-    std::vector<std::function<void()>> funciones;
-    for (int i = 0; i < 2; ++i) {
-        funciones.push_back(recibo);
+    std::vector<MapHijosFunc> _hijos;
+    for (int i = 0; i < 2; ++i)
+    {
+        _hijos.push_back({"recibo", recibo});
     }
 
-    for (int i = 0; i < _cantidadCocineros; ++i) {
-        funciones.push_back(cocinero);
-    }
-    
-    for (int i = 0; i < 2; ++i) {
-        funciones.push_back(armado);
+    for (int i = 0; i < _cantidadCocineros; ++i)
+    {
+        _hijos.push_back({"cocinero", cocinero});
     }
 
-    for (int i = 0; i < 2; ++i) {
-        funciones.push_back(empaque);
+    for (int i = 0; i < 2; ++i)
+    {
+        _hijos.push_back({"armado", armado});
     }
 
-    for (int i = 0; i < 2; ++i) {
-        funciones.push_back(entrega);
+    for (int i = 0; i < 2; ++i)
+    {
+        _hijos.push_back({"empaque", empaque});
     }
-    
-    
-    for (int i = 0; i < (int)funciones.size(); ++i) {
+
+    for (int i = 0; i < 2; ++i)
+    {
+        _hijos.push_back({"entrega", entrega});
+    }
+
+    for (const auto &hijo : _hijos)
+    {
         pid_t pid = fork();
-        if (pid == 0) {
-            funciones[i]();
+        if (pid == 0)
+        {
+            hijo.func(); // Llamar a la función del cocinero
             exit(EXIT_SUCCESS);
-        } else if (pid > 0) {
-            cocineros.push_back(pid);
-            cout << "Cocinero con PID " << pid << " (función " << i << ") creado.\n";
-        } else {
+        }
+        else if (pid > 0)
+        {
+            hijosData.push_back({hijo.tipo, pid});
+            cout << "Cocinero" << hijo.tipo << "con PID " << pid << " creado.\n";
+        }
+        else
+        {
             cerr << "Error al crear el proceso del cocinero." << endl;
             exit(EXIT_FAILURE);
         }
@@ -56,87 +73,135 @@ void Cocina::LlamarCocineros() {
     cout << "Todos los cocineros están activos.\n";
 }
 
-void Cocina::RecibirPedidos() {
-    // Abrir el archivo en cada iteración para evitar problemas de concurrencia entre procesos
-    while(true)
+void Cocina::RecibirPedidos()
+{
+    signal(SIGTERM, handler_sigterm); // Establecer el manejador de SIGTERM en el proceso hijo
+    while (true)
     {
         s_Pedido pedido;
         sleep(5);
-        if (!ColaPendientes.Pop(pedido)) {
+        if (!ColaPendientes.Pop(pedido, true))
+        {
+            if (terminar)
+            {
+                cout << "Recibo: Terminado por SIGTERM." << endl;
+                break;
+            }
+
             sleep(1);
             continue;
         }
         sleep(1);
         pedido.estado = EstadoPedido::RECIBIDO;
-        while (!ColaRecibidos.Push(pedido)) {
+        while (!ColaRecibidos.Push(pedido))
+        {
             sleep(1);
         }
         ColaRecibidos.Log(pedido);
     }
 }
 
-void Cocina::Cocinar() {
-    while (true) {
+void Cocina::Cocinar()
+{
+    signal(SIGTERM, handler_sigterm);
+    while (true)
+    {
         s_Pedido pedido;
-        if (!ColaRecibidos.Pop(pedido)) {
+        if (!ColaRecibidos.Pop(pedido, true))
+        {
+            if (terminar)
+            {
+                cout << "Cocinero: Terminado por SIGTERM." << endl;
+                break;
+            }
+
             sleep(1);
             continue;
         }
         sleep(pedido.combo.tiempoPreparacion);
         pedido.estado = EstadoPedido::COCINADO;
-        while (!ColaCoccion.Push(pedido)) {
+        while (!ColaCoccion.Push(pedido))
+        {
             sleep(1);
         }
         ColaCoccion.Log(pedido);
     }
 }
 
-void Cocina::ArmarPedidos() {
+void Cocina::ArmarPedidos()
+{
+    signal(SIGTERM, handler_sigterm);
     while (true)
     {
         s_Pedido pedido;
-        if (!ColaCoccion.Pop(pedido)) {
+        if (!ColaCoccion.Pop(pedido,true))
+        {
+            if (terminar)
+            {
+                cout << "Armado: Terminado por SIGTERM." << endl;
+                break;
+            }
             sleep(1);
             continue;
         }
         sleep(1);
         pedido.estado = EstadoPedido::ARMADO;
-        while (!ColaArmado.Push(pedido)) {
+        while (!ColaArmado.Push(pedido))
+        {
             sleep(1);
         }
         ColaArmado.Log(pedido);
     }
 }
 
-void Cocina::EmpaquetarPedidos() {
+void Cocina::EmpaquetarPedidos()
+{
+    signal(SIGTERM, handler_sigterm);
     while (true)
     {
         s_Pedido pedido;
-        if (!ColaArmado.Pop(pedido)) {
+        if (!ColaArmado.Pop(pedido, true))
+        {
+            if (terminar)
+            {
+                cout << "Empaque: Terminado por SIGTERM." << endl;
+                break;
+            }
             sleep(1);
             continue;
         }
         sleep(1);
         pedido.estado = EstadoPedido::EMPAQUETADO;
-        while (!ColaEmpaquetado.Push(pedido)) {
+        while (!ColaEmpaquetado.Push(pedido))
+        {
             sleep(1);
         }
         ColaEmpaquetado.Log(pedido);
     }
+    
 }
 
-void Cocina::EntregarPedidos() {
-    while(true)
+void Cocina::EntregarPedidos()
+{
+    signal(SIGTERM, handler_sigterm);
+    while (true)
     {
         s_Pedido pedido;
-        if (!ColaEmpaquetado.Pop(pedido)) {
+        if (!ColaEmpaquetado.Pop(pedido, true))
+        {
+            if (terminar)
+            {
+                cout << "Entrega: Terminado por SIGTERM." << endl;
+                break;
+            }
             sleep(1);
             continue;
         }
 
         sleep(1);
         pedido.estado = EstadoPedido::ENTREGADO;
-        while (!ColaEntrega.Push(pedido)) {
+        while (!ColaEntrega.Push(pedido))
+        {
             sleep(1);
         }
         ColaEntrega.Log(pedido);
@@ -144,17 +209,27 @@ void Cocina::EntregarPedidos() {
     }
 }
 
-
-
-Cocina::~Cocina() {
+Cocina::~Cocina()
+{
 
     cout << "Cerrando cocina...\n";
-    
-    // Matar procesos hijos
-    for (pid_t pid : cocineros) {
-        kill(pid, SIGTERM);  // Podés usar SIGKILL si no responden
-        waitpid(pid, nullptr, 0); // Esperamos que terminen
-        cout << "Cocinero con PID " << pid << " terminado.\n";
+
+    // Matar procesos hijos en orden: primero recibo, luego cocinero, luego el resto
+    std::vector<std::string> orden = {"recibo", "cocinero", "armado", "empaque", "entrega"};
+    for (const auto& tipo : orden) {
+        cout << "Terminando cocineros de tipo: " << tipo << "\n";
+        for (const auto& hijo : hijosData) {
+            if (hijo.tipo == tipo) {
+                cout << "Enviando SIGTERM a cocinero " << hijo.tipo << " con PID " << hijo.pid << "\n";
+                kill(hijo.pid, SIGTERM);
+            }
+        }
+        for (const auto& hijo : hijosData) {
+            if (hijo.tipo == tipo) {
+                waitpid(hijo.pid, nullptr, 0);
+                cout << "Cocinero " << hijo.tipo << " con PID " << hijo.pid << " terminado.\n";
+            }
+        }
     }
 
     cout << "Cocina cerrada correctamente.\n";

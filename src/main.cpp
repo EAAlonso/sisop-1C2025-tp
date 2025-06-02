@@ -5,14 +5,16 @@
 
 #include <limits>
 
+Cocina* g_cocina = nullptr;
+
 int main()
 {
 
     ManagerPedidos managerPedidos;
-    Cocina cocina;
+    g_cocina = new Cocina();
     Menu menu;
 
-    cocina.LlamarCocineros();
+    g_cocina->LlamarCocineros();
     
     Menu::EsperarAccion();
     menu.Mostrar();

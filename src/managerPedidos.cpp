@@ -19,6 +19,12 @@ ColaMemCompartida ColaEntrega = ColaMemCompartida("Entrega", "6-entrega.log");
 
 void ManagerPedidos::CrearPedido(int comboId)
 {
+    if (terminar)
+    {
+        cout << "El programa ha terminado. No se pueden crear más pedidos." << endl;
+        return;
+    }
+
     if (comboId < 1 || comboId > 3)
     {
         cout << "ID de combo no válido" << endl;

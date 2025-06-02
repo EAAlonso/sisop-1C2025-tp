@@ -9,22 +9,37 @@
 #include <unistd.h>
 #include <csignal>
 #include <sys/wait.h>
+#include <map>
 
 #include "managerPedidos.hpp"
+#include <functional>
 
 using namespace std;
 
 extern ManagerPedidos managerPedidos;
+extern std::map<std::string, std::vector<pid_t>> workerPids;
+
+struct MapHijosFunc
+{
+    string tipo;
+    function<void()> func;
+};
+
+struct MapHijosData
+{
+    string tipo;
+    pid_t pid;
+};
 
 class Cocina
 {
 public:
-    Cocina();
+    Cocina() = default;
     ~Cocina();
 
     void LlamarCocineros(); // crear procesos hijos
 private:
-    vector<pid_t> cocineros; // Guarda los PIDs de los hijos
+    vector<MapHijosData> hijosData; // Guarda los PIDs de los hijos
     void inicializar();
     void atenderPedidos();
 

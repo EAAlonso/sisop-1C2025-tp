@@ -1,5 +1,8 @@
 #include "../headers/menu.hpp"
+#include "../headers/cocina.hpp"
 #include <limits>
+
+extern Cocina* g_cocina;
 
 Menu::Menu() {
     this->managerPedidos = ManagerPedidos();
@@ -21,7 +24,12 @@ void Menu::Mostrar() {
                 //showStatusMenu();
                 break;
             case 3:
-                cout << "Saliendo del programa.\n" << endl;
+                managerPedidos.Terminar(); // Indicar que se debe terminar el programa
+                cout << "Saliendo del programa. Cerrando cocina y esperando a los cocineros...\n" << endl;
+                if (g_cocina) {
+                    delete g_cocina;
+                    g_cocina = nullptr;
+                }
                 break;
             default:
                 cout << "Opción no válida." << endl;

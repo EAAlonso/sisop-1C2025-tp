@@ -96,11 +96,25 @@ bool ColaMemCompartida::Push(const s_Pedido& order) {
     return true;
 }
 
-bool ColaMemCompartida::Pop(s_Pedido& out) {
-    sem_wait(items);
+// Pop: modo bloqueante o no bloqueante
+bool ColaMemCompartida::Pop(s_Pedido& out, bool nonblocking) {
+    int sem_result;
+    if (nonblocking) {
+        sem_result = sem_trywait(items);
+        if (sem_result == -1) {
+            if (errno == EAGAIN) {
+                return false;
+            } else {
+                perror("sem_trywait(items)");
+                return false;
+            }
+        }
+    }
+
     sem_wait(mutex);
     if (cola->pri == cola->ult && cola->cantidad == 0) {
         sem_post(mutex);
+        if (!nonblocking) sem_post(items); // Solo reponer si era bloqueante
         return false;
     }
     out = cola->pedidos[cola->pri];

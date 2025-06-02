@@ -18,6 +18,8 @@ class ManagerPedidos
 public:
     ManagerPedidos() = default;
     void CrearPedido(int comboId);
+    void Terminar() { terminar = true; } // Método para indicar que se debe terminar el programa
 private:
     int countId = 0; // Contador para generar IDs únicos de pedidos
+    int terminar = false; // Variable para controlar el estado del programa
 };

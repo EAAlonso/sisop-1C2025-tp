@@ -41,7 +41,7 @@ public:
     ~ColaMemCompartida();
 
     bool Push(const s_Pedido &order);
-    bool Pop(s_Pedido &out);
+    bool Pop(s_Pedido &out, bool nonblocking = false);
     void Log(const s_Pedido& pedido);
 
     int init(string nombre);
