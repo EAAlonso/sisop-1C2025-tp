@@ -1,8 +1,8 @@
 #include "../headers/menu.hpp"
 #include <limits>
 
-Menu::Menu(ManagerPedidos *managerPedidos) {
-    this->managerPedidos = managerPedidos;
+Menu::Menu() {
+    this->managerPedidos = ManagerPedidos();
 }
 
 void Menu::Mostrar() {
@@ -32,7 +32,7 @@ void Menu::Mostrar() {
 }
 
 void Menu::mostrarTitulo() {
-    //system("clear");
+    system("clear");
     cout << "¡¡¡Bienvenidos a FORK & BURGER!!!" << endl;
     cout << SEPARATOR;
 }
@@ -56,7 +56,7 @@ void Menu::seleccionarCombo() {
         return;
     }
 
-    managerPedidos->CrearPedido(opcion);
+    managerPedidos.CrearPedido(opcion);
 }
 
 void Menu::mostrarOpcionesCombos() {
@@ -74,4 +74,13 @@ void Menu::mostrarOpcionesCombos() {
 void Menu::EsperarAccion() {  
     std::cout << "Presionar ENTER para continuar...";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+string Menu::TipoComboToString(TipoCombo tipo) {
+    switch (tipo) {
+        case TipoCombo::SIMPLE: return "SIMPLE";
+        case TipoCombo::DOBLE: return "DOBLE";
+        case TipoCombo::COMPLETO: return "COMPLETO";
+        default: return "Desconocido";
+    }
 }

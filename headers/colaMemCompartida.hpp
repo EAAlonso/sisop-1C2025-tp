@@ -37,11 +37,12 @@ class ColaMemCompartida
 {
 public:
     ColaMemCompartida() : mutex(nullptr), espacio(nullptr), items(nullptr), cola(nullptr) {}
-    ColaMemCompartida(string nombre);
+    ColaMemCompartida(string nombre, string logFileName);
     ~ColaMemCompartida();
 
     bool Push(const s_Pedido &order);
     bool Pop(s_Pedido &out);
+    void Log(const s_Pedido& pedido);
 
     int init(string nombre);
     void Destroy();
@@ -50,5 +51,10 @@ private:
     sem_t *mutex;
     sem_t *espacio;
     sem_t *items;
+    sem_t *logMutex;
     ColaPedidos *cola;
+    string logFileName; // Nombre del archivo de log
+    const string logDir = "logs/"; // Directorio de logs
+
+    string buildLogString(const s_Pedido& pedido);
 };

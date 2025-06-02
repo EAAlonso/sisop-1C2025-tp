@@ -14,12 +14,12 @@
 
 using namespace std;
 
- extern ManagerPedidos managerPedidos;
+extern ManagerPedidos managerPedidos;
 
 class Cocina
 {
 public:
-    Cocina(ManagerPedidos *managerPedidos);
+    Cocina();
     ~Cocina();
 
     void LlamarCocineros(); // crear procesos hijos
@@ -27,8 +27,6 @@ private:
     vector<pid_t> cocineros; // Guarda los PIDs de los hijos
     void inicializar();
     void atenderPedidos();
-
-    ManagerPedidos *managerPedidos; // Instancia de ManagerPedidos para acceder a las colas
 
     void RecibirPedidos();
     void Cocinar();

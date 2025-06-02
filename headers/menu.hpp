@@ -12,15 +12,14 @@ class Menu
 {
 public:
     Menu();
-    Menu(ManagerPedidos *managerPedidos);
 
     void Mostrar();
     static void EsperarAccion();
-
+    static string TipoComboToString(TipoCombo tipo);
 private:
     void mostrarTitulo();
     void mostrarMenu();
     void seleccionarCombo();
     void mostrarOpcionesCombos();
-    ManagerPedidos *managerPedidos;
+    ManagerPedidos managerPedidos;
 };

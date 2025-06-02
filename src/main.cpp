@@ -9,8 +9,8 @@ int main()
 {
 
     ManagerPedidos managerPedidos;
-    Cocina cocina = Cocina(&managerPedidos);
-    Menu menu = Menu(&managerPedidos);
+    Cocina cocina;
+    Menu menu;
 
     cocina.LlamarCocineros();
     
