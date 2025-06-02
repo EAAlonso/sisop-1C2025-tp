@@ -52,18 +52,18 @@ void Cocina::aceptarClientes() {
             continue;
         }
 
-        // 🔐 CONTROL DE LÍMITE DE CLIENTES
+
         {
-            std::unique_lock<std::mutex> lock(mutexClientes);
+            unique_lock<mutex> lock(mutexClientes);
             if (clientesActivos >= MAX_CLIENTES) {
                 cout << "[Cocina] Límite de clientes alcanzado. Rechazando conexión." << endl;
-                close(socketCliente);  // ❗ RECHAZAR AL TOQUE
+                close(socketCliente);
                 continue;
             }
             clientesActivos++;
         }
 
-        std::thread([this, socketCliente, direccionCliente]() {
+        thread([this, socketCliente, direccionCliente]() {
             char ipCliente[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &direccionCliente.sin_addr, ipCliente, INET_ADDRSTRLEN);
             cout << "[Cocina] Conexión aceptada desde: " << ipCliente << endl;
@@ -104,9 +104,6 @@ void Cocina::aceptarClientes() {
                 liberarCliente();
                 return;
             }
-
-            // 💬 El socket se cierra cuando el cocinero termina el pedido
-            // liberarCliente() también lo llamás ahí
         }).detach();
     }
 }
@@ -114,12 +111,27 @@ void Cocina::aceptarClientes() {
 
 
 void Cocina::liberarCliente() {
-    std::lock_guard<std::mutex> lock(mutexClientes);
-    clientesActivos--;
+    {
+        lock_guard<mutex> lock(mutexClientes);
+        clientesActivos--;
+    }
+
+    {
+        lock_guard<mutex> lock(mutexColaPedidos);
+        if (clientesActivos == 0 && colaPedidos.empty() && !cierreSolicitado) {
+            cierreSolicitado = true;
+            cout << "[Cocina] Todos los clientes se retiraron y no hay más pedidos. Cerrando cocina..." << endl;
+            cerrarCocina();
+            raise(SIGINT);
+        }
+    }
+
     cvClientes.notify_one();
 }
 
 void Cocina::cerrarCocina() {
+    if (!servidorActivo) return;
+
     servidorActivo = false;
     close(socketServidor);
     cvPedidos.notify_all();

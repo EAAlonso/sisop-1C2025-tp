@@ -31,6 +31,7 @@ int main() {
             break;
             case 4:
                 cout << "Saliendo del cliente...\n";
+                exit(0);
             break;
             default:
                 cout << "Opción inválida, intente nuevamente.\n";

@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <arpa/inet.h>
+#include <csignal>
 
 using namespace std;
 using nlohmann::json;
@@ -42,6 +43,7 @@ public:
     queue<Pedido> colaPedidos;
     mutex mutexColaPedidos;
     condition_variable cvPedidos; // receive bloqueante ->  espera que otro hilo lo despierte con una señal 
+    atomic<bool> cierreSolicitado = false;
 
     void abrirCocina();
     void cerrarCocina();
