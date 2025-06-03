@@ -1,11 +1,11 @@
 #include "../headers/menu.hpp"
+#include "../headers/cocina.hpp"
 #include <limits>
 
-Menu::Menu() {
-    pedido = Pedido();
+extern Cocina* g_cocina;
 
-    // Constructor should only initialize the object
-    // You can initialize variables or set up the state here if needed
+Menu::Menu() {
+    this->managerPedidos = ManagerPedidos();
 }
 
 void Menu::Mostrar() {
@@ -24,7 +24,12 @@ void Menu::Mostrar() {
                 //showStatusMenu();
                 break;
             case 3:
-                cout << "Saliendo del programa.\n" << endl;
+                managerPedidos.Terminar();
+                cout << "Saliendo del programa. Cerrando cocina y esperando a los cocineros...\n" << endl;
+                if (g_cocina) {
+                    delete g_cocina;
+                    g_cocina = nullptr;
+                }
                 break;
             default:
                 cout << "Opción no válida." << endl;
@@ -35,7 +40,7 @@ void Menu::Mostrar() {
 }
 
 void Menu::mostrarTitulo() {
-    //system("clear");
+    system("clear");
     cout << "¡¡¡Bienvenidos a FORK & BURGER!!!" << endl;
     cout << SEPARATOR;
 }
@@ -43,7 +48,7 @@ void Menu::mostrarTitulo() {
 void Menu::mostrarMenu() {
     mostrarTitulo();
     cout <<  "1. Crear Combo" << endl;
-    cout << "2. Mostrar Combos" << endl;
+    //cout << "2. Mostrar Combos" << endl;
     cout << SEPARATOR << endl;
     cout << "3. Salir" << endl;
     cout << SEPARATOR << endl;
@@ -59,7 +64,7 @@ void Menu::seleccionarCombo() {
         return;
     }
 
-    pedido.CrearPedido(opcion);
+    managerPedidos.CrearPedido(opcion);
 }
 
 void Menu::mostrarOpcionesCombos() {
@@ -77,4 +82,13 @@ void Menu::mostrarOpcionesCombos() {
 void Menu::EsperarAccion() {  
     std::cout << "Presionar ENTER para continuar...";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+string Menu::TipoComboToString(TipoCombo tipo) {
+    switch (tipo) {
+        case TipoCombo::SIMPLE: return "SIMPLE";
+        case TipoCombo::DOBLE: return "DOBLE";
+        case TipoCombo::COMPLETO: return "COMPLETO";
+        default: return "Desconocido";
+    }
 }

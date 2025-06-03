@@ -1,28 +1,22 @@
-#include "../headers/cocinero.hpp"
 #include "../headers/cocina.hpp"
 #include "../headers/menu.hpp"
-#include "../headers/pedido.hpp"
+#include "../headers/managerPedidos.hpp"
 
 #include <limits>
 
-
-#define MAX_COCINEROS 3
+Cocina* g_cocina = nullptr;
 
 int main()
 {
 
-    //Pedido pedidos;
-    Cocina cocina = Cocina();
+    ManagerPedidos managerPedidos;
+    g_cocina = new Cocina();
     Menu menu;
 
-    //pedidos.InitColaPedidos();
-
-    cocina.LlamarCocineros(MAX_COCINEROS);
+    g_cocina->LlamarCocineros();
     
-    menu.EsperarAccion();
+    Menu::EsperarAccion();
     menu.Mostrar();
-
-    //pedidos.DestroySemaforosColaPedidos();
 
     return 0;
 }
