@@ -13,10 +13,6 @@ void handler_sigterm(int)
 
 void Cocina::LlamarCocineros()
 {
-    const int _cantidadCocineros = 5;
-    cout << "Llamando a " << _cantidadCocineros << " cocineros..." << endl;
-
-    // Definir 5 funciones diferentes para los cocineros
     auto recibo = [this]() { RecibirPedidos(); };
     auto cocinero = [this]() { Cocinar(); };
     auto armado = [this]() { ArmarPedidos(); };
@@ -25,27 +21,27 @@ void Cocina::LlamarCocineros()
 
     // Vector de punteros a funciones
     std::vector<MapHijosFunc> _hijos;
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < CANTIDAD_HIJOS_RECIBO; ++i)
     {
         _hijos.push_back({"recibo", recibo});
     }
 
-    for (int i = 0; i < _cantidadCocineros; ++i)
+    for (int i = 0; i < CANTIDAD_HIJOS_COCINERO; ++i)
     {
         _hijos.push_back({"cocinero", cocinero});
     }
 
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < CANTIDAD_HIJOS_ARMADO; ++i)
     {
         _hijos.push_back({"armado", armado});
     }
 
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < CANTIDAD_HIJOS_EMPAQUE; ++i)
     {
         _hijos.push_back({"empaque", empaque});
     }
 
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < CANTIDAD_HIJOS_ENTREGA; ++i)
     {
         _hijos.push_back({"entrega", entrega});
     }
@@ -55,13 +51,13 @@ void Cocina::LlamarCocineros()
         pid_t pid = fork();
         if (pid == 0)
         {
-            hijo.func(); // Llamar a la función del cocinero
+            hijo.func();
             exit(EXIT_SUCCESS);
         }
         else if (pid > 0)
         {
             hijosData.push_back({hijo.tipo, pid});
-            cout << "Cocinero" << hijo.tipo << "con PID " << pid << " creado.\n";
+            cout << "Cocinero " << hijo.tipo << " con PID " << pid << " creado.\n";
         }
         else
         {
@@ -75,7 +71,7 @@ void Cocina::LlamarCocineros()
 
 void Cocina::RecibirPedidos()
 {
-    signal(SIGTERM, handler_sigterm); // Establecer el manejador de SIGTERM en el proceso hijo
+    signal(SIGTERM, handler_sigterm);
     while (true)
     {
         s_Pedido pedido;
@@ -214,7 +210,6 @@ Cocina::~Cocina()
 
     cout << "Cerrando cocina...\n";
 
-    // Matar procesos hijos en orden: primero recibo, luego cocinero, luego el resto
     std::vector<std::string> orden = {"recibo", "cocinero", "armado", "empaque", "entrega"};
     for (const auto& tipo : orden) {
         cout << "Terminando cocineros de tipo: " << tipo << "\n";

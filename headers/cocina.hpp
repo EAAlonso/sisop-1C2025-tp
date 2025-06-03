@@ -14,6 +14,17 @@
 #include "managerPedidos.hpp"
 #include <functional>
 
+#define CANTIDAD_HIJOS_RECIBO 2
+#define CANTIDAD_HIJOS_COCINERO 5
+#define CANTIDAD_HIJOS_ARMADO 2
+#define CANTIDAD_HIJOS_EMPAQUE 2
+#define CANTIDAD_HIJOS_ENTREGA 2
+
+#define TIEMPO_PREPARACION_SIMPLE 4
+#define TIEMPO_PREPARACION_DOBLE 6
+#define TIEMPO_PREPARACION_COMPLETO 8
+
+
 using namespace std;
 
 extern ManagerPedidos managerPedidos;

@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "enum.hpp"
-// #include "managerPedidos.hpp"
+
 using namespace std;
 
 #define MAX_PEDIDOS 10
@@ -44,9 +44,7 @@ public:
     bool Pop(s_Pedido &out, bool nonblocking = false);
     void Log(const s_Pedido& pedido);
 
-    int init(string nombre);
-    void Destroy();
-    
+    int init(string nombre);    
 private:
     sem_t *mutex;
     sem_t *espacio;
@@ -56,5 +54,6 @@ private:
     string logFileName; // Nombre del archivo de log
     const string logDir = "logs/"; // Directorio de logs
 
+    void InitLog(string nombre);
     string buildLogString(const s_Pedido& pedido);
 };

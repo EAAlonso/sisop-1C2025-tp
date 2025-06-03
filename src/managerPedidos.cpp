@@ -30,36 +30,37 @@ void ManagerPedidos::CrearPedido(int comboId)
         cout << "ID de combo no válido" << endl;
         return;
     }
-    s_Pedido pedido; // Estructura para el pedido
 
-    pedido.id = countId++;    // TODO: Chequear generacion ID
-    pedido.combo = s_Combo(); // Inedido.combo.tipo = static_cast<TipoCombo>(comboId - 1);
+    s_Pedido pedido; 
+    pedido.id = countId++;
+    pedido.combo = s_Combo();
+
     switch (comboId-1)
     {
     case TipoCombo::SIMPLE:
         pedido.combo.tipo = TipoCombo::SIMPLE;
-        pedido.combo.tiempoPreparacion = 4;
+        pedido.combo.tiempoPreparacion = TIEMPO_PREPARACION_SIMPLE;
         break;
     case TipoCombo::DOBLE:
         pedido.combo.tipo = TipoCombo::DOBLE;
-        pedido.combo.tiempoPreparacion = 6;
+        pedido.combo.tiempoPreparacion = TIEMPO_PREPARACION_DOBLE;
         break;
     case TipoCombo::COMPLETO:
         pedido.combo.tipo = TipoCombo::COMPLETO;
-        pedido.combo.tiempoPreparacion = 8;
+        pedido.combo.tiempoPreparacion = TIEMPO_PREPARACION_COMPLETO;
         break;
     }
-    pedido.estado = EstadoPedido::PENDIENTE; // TODO: Esperar si no hay espacio
+    pedido.estado = EstadoPedido::PENDIENTE;
 
     while(!ColaPendientes.Push(pedido)) {
-        cout << "Cola de pedidos llena. No se pudo crear el pedido. Intentando en 2 segundos..." << endl;
-        sleep(2); // Espera 2 segundos antes de intentar nuevamente
+        cout << "Cola de pedidos llena. No se pudo crear el pedido. Reintentando en 2 segundos..." << endl;
+        sleep(2);
     }
 
     ColaPendientes.Log(pedido); 
 
     cout << "Pedido creado con ID: " << pedido.id << " y tipo de combo: " << Menu::TipoComboToString(pedido.combo.tipo) << endl;
 
-    sleep(0.5);
+    sleep(1);
     Menu::EsperarAccion();
 }

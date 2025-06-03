@@ -1,4 +1,3 @@
-#include "../headers/cocinero.hpp"
 #include "../headers/cocina.hpp"
 #include "../headers/menu.hpp"
 #include "../headers/managerPedidos.hpp"
@@ -18,8 +17,6 @@ int main()
     
     Menu::EsperarAccion();
     menu.Mostrar();
-
-    //pedidos.DestroySemaforosColaPedidos();
 
     return 0;
 }

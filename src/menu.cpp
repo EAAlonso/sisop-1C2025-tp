@@ -24,7 +24,7 @@ void Menu::Mostrar() {
                 //showStatusMenu();
                 break;
             case 3:
-                managerPedidos.Terminar(); // Indicar que se debe terminar el programa
+                managerPedidos.Terminar();
                 cout << "Saliendo del programa. Cerrando cocina y esperando a los cocineros...\n" << endl;
                 if (g_cocina) {
                     delete g_cocina;
@@ -48,7 +48,7 @@ void Menu::mostrarTitulo() {
 void Menu::mostrarMenu() {
     mostrarTitulo();
     cout <<  "1. Crear Combo" << endl;
-    cout << "2. Mostrar Combos" << endl;
+    //cout << "2. Mostrar Combos" << endl;
     cout << SEPARATOR << endl;
     cout << "3. Salir" << endl;
     cout << SEPARATOR << endl;
