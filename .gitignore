@@ -10,17 +10,9 @@
 *.app
 
 # Directorios comunes de build
-ejercicio-1/servidor/build/
-ejercicio-1/servidor/bin/
-ejercicio-1/servidor/obj/
-
-ejercicio-2/servidor/build/
-ejercicio-2/servidor/bin/
-ejercicio-2/servidor/obj/
-
-ejercicio-2/cliente/build/
-ejercicio-2/cliente/bin/
-ejercicio-2/cliente/obj/
+/build/
+/bin/
+/obj/
 
 # Archivos de depuración y logs
 *.log
@@ -52,5 +44,3 @@ compile_commands.json
 
 # Archivos de pruebas o temporales propios
 test-output/
-
-
