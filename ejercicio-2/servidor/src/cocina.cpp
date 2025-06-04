@@ -125,7 +125,6 @@ void Cocina::liberarCliente() {
             raise(SIGINT);
         }
     }
-
     cvClientes.notify_one();
 }
 
@@ -133,7 +132,19 @@ void Cocina::cerrarCocina() {
     if (!servidorActivo) return;
 
     servidorActivo = false;
+
     close(socketServidor);
+
+    int dummySock = socket(AF_INET, SOCK_STREAM, 0);
+    if (dummySock >= 0) {
+        sockaddr_in addr{};
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(puerto);
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+        connect(dummySock, (struct sockaddr*)&addr, sizeof(addr));
+        close(dummySock);
+    }
+
     cvPedidos.notify_all();
 
     if (hiloAceptador.joinable()) hiloAceptador.join();

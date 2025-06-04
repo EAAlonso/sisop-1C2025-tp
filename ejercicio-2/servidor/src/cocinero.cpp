@@ -30,6 +30,7 @@ void Cocinero::trabajar() {
                     return !cocina.colaPedidos.empty() || !cocina.servidorActivo;
                 });
 
+
                 if (!cocina.servidorActivo && cocina.colaPedidos.empty()) {
                     logPedido("Nos vemoss 👋");
                     return;
@@ -65,7 +66,8 @@ void Cocinero::trabajar() {
             }
         }
     } catch (const exception& e) {
-        cerr << "[Cocinero " << id << "] Error inesperado: " << e.what() << endl;
+        //cerr << "[Cocinero " << id << "] Error inesperado: " << e.what() << endl;
+        return;
     }
 }
 
