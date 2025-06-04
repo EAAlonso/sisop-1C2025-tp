@@ -3,7 +3,7 @@
 using namespace std;
 
 int main() {
-    string host = "190.173.130.240";
+    string host = "127.0.0.1";
     //string host = "0.0.0.0";
     
     int puerto = 8080;

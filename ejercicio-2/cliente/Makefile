@@ -4,7 +4,7 @@ CXXFLAGS = -Wall -Wextra -std=c++17 -pthread
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
-TARGET = $(BIN_DIR)/app
+TARGET = $(BIN_DIR)/ejercicio_2_cliente
 
 # Buscar todos los archivos .cpp en el directorio src
 SRCS = $(wildcard $(SRC_DIR)/*.cpp)
