@@ -10,9 +10,17 @@
 *.app
 
 # Directorios comunes de build
-/build/
-/bin/
-/obj/
+ejercicio-1/build/
+ejercicio-1/bin/
+ejercicio-1/obj/
+
+ejercicio-2/cliente/build/
+ejercicio-2/cliente/bin/
+ejercicio-2/cliente/obj/
+
+ejercicio-2/servidor/build/
+ejercicio-2/servidor/bin/
+ejercicio-2/servidor/obj/
 
 # Archivos de depuración y logs
 *.log

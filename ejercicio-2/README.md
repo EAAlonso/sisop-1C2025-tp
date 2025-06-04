@@ -1,4 +1,4 @@
-# Trabajo Práctico: Parte 1 - Coordinación de Tareas con Procesos y Memoria Compartida
+# Trabajo Práctico 2 - Coordinación de Tareas con Procesos y Memoria Compartida
 # GRUPO 12
 
 ## Descripción
@@ -11,10 +11,10 @@ La comunicación se realiza mediante sockets TCP y los mensajes se envían en fo
 ## Ejecución
 
 1. Servidor
-./bin/app
+./bin/ejercicio_2_servidor
 
 2. Cliente
-./bin/app
+./bin/ejercicio_2_cliente
 
 ##
 
