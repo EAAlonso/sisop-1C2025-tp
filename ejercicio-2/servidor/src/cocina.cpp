@@ -121,8 +121,8 @@ void Cocina::liberarCliente() {
         if (clientesActivos == 0 && colaPedidos.empty() && !cierreSolicitado) {
             cierreSolicitado = true;
             cout << "[Cocina] Todos los clientes se retiraron y no hay más pedidos. Cerrando cocina..." << endl;
-            cerrarCocina();
             raise(SIGINT);
+            cerrarCocina();
         }
     }
     cvClientes.notify_one();
