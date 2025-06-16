@@ -1,6 +1,7 @@
 # Variables
 CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++17 -pthread
+LDLIBS = -lrt
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
@@ -17,7 +18,7 @@ all: $(TARGET)
 # Regla para compilar el ejecutable
 $(TARGET): $(OBJS)
 	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
 
 # Regla para compilar archivos .cpp a .o
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp

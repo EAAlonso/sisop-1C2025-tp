@@ -46,12 +46,22 @@ public:
 
     int init(string nombre);    
 private:
+    int sem_shm = -1; 
+    int col_shm = -1; 
+
+    // Identificadores de la memoria compartida
+    string semName;
+    string colName;
+    string GetShmSemName() const { return "/sem_shm_" + semName; }
+    string GetShmColName() const { return "/col_shm_" + colName; }
+
     sem_t *mutex;
     sem_t *espacio;
     sem_t *items;
     sem_t *logMutex;
     ColaPedidos *cola;
     string logFileName; // Nombre del archivo de log
+    
     const string logDir = "logs/"; // Directorio de logs
 
     void InitLog(string nombre);

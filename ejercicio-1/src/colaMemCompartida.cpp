@@ -5,23 +5,37 @@
 #include <sys/stat.h>
 #include <iomanip>
 #include <cerrno>
+
 #include "../headers/menu.hpp"
 #include "../headers/colaMemCompartida.hpp"
+
+#include <fcntl.h>
 
 ColaMemCompartida::ColaMemCompartida(string nombre, string logFileName)
 {
     this->logFileName = this->logDir + logFileName;
+    this->semName = nombre;
+    this->colName = nombre;
+
     init(nombre);
 }
 
 int ColaMemCompartida::init(string nombre)
 {
+    
+
+    sem_shm = shm_open(GetShmSemName().c_str(), O_CREAT | O_RDWR, 0666);
+    if (sem_shm == -1) {
+        perror("shm_open");
+        exit(1);
+    }
+
     void *sem_mem = mmap(
         nullptr,
         sizeof(sem_t) * 4,
         PROT_READ | PROT_WRITE,
         MAP_SHARED | MAP_ANONYMOUS,
-        -1,
+        sem_shm,
         0);
     if (sem_mem == MAP_FAILED)
     {
@@ -38,13 +52,19 @@ int ColaMemCompartida::init(string nombre)
     sem_init(items, 1, 0);             // Pedidos disponibles para consumidor
     sem_init(logMutex, 1, 1);          // Escritura en log
 
+    col_shm = shm_open(GetShmColName().c_str(), O_CREAT | O_RDWR, 0666);
+    if (col_shm == -1) {
+        perror("shm_open_col");
+        exit(1);
+    }
+
     // Memoria para cola compartida
     cola = (ColaPedidos *)mmap(
         nullptr,
         sizeof(ColaPedidos),
         PROT_READ | PROT_WRITE,
         MAP_SHARED | MAP_ANONYMOUS,
-        -1,
+        col_shm,
         0);
     if (cola == MAP_FAILED)
     {
@@ -210,6 +230,18 @@ ColaMemCompartida::~ColaMemCompartida()
         sem_destroy(espacio);
     if (items)
         sem_destroy(items);
+    if (logMutex)
+        sem_destroy(logMutex);
     if (cola)
         munmap(cola, sizeof(ColaPedidos) * MAX_PEDIDOS);
+    
+    if (sem_shm != -1) {
+        close(sem_shm);
+        shm_unlink(GetShmSemName().c_str());
+    }
+
+    if (col_shm != -1) {
+        close(col_shm);
+        shm_unlink(GetShmColName().c_str());
+    }
 }
