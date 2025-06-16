@@ -211,5 +211,5 @@ ColaMemCompartida::~ColaMemCompartida()
     if (items)
         sem_destroy(items);
     if (cola)
-        munmap(cola, sizeof(ColaPedidos) * MAX_PEDIDOS);
+        munmap(cola, sizeof(ColaPedidos));
 }
