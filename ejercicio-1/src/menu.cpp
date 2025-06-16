@@ -21,7 +21,7 @@ void Menu::Mostrar() {
                 seleccionarCombo();
                 break;
             case 2:
-                //showStatusMenu();
+                cargarArchivo();
                 break;
             case 3:
                 managerPedidos.Terminar();
@@ -47,8 +47,8 @@ void Menu::mostrarTitulo() {
 
 void Menu::mostrarMenu() {
     mostrarTitulo();
-    cout <<  "1. Crear Combo" << endl;
-    //cout << "2. Mostrar Combos" << endl;
+    cout << "1. Crear Combo manual" << endl;
+    cout << "2. Cargar Combos desde archivo" << endl;
     cout << SEPARATOR << endl;
     cout << "3. Salir" << endl;
     cout << SEPARATOR << endl;
@@ -64,7 +64,7 @@ void Menu::seleccionarCombo() {
         return;
     }
 
-    managerPedidos.CrearPedido(opcion);
+    managerPedidos.CrearPedido(opcion, true);
 }
 
 void Menu::mostrarOpcionesCombos() {
@@ -80,7 +80,6 @@ void Menu::mostrarOpcionesCombos() {
 }
 
 void Menu::EsperarAccion() {  
-    std::cout << "Presionar ENTER para continuar...";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
@@ -91,4 +90,12 @@ string Menu::TipoComboToString(TipoCombo tipo) {
         case TipoCombo::COMPLETO: return "COMPLETO";
         default: return "Desconocido";
     }
+}
+
+void Menu::cargarArchivo() {
+    string filename;
+    cout << "Ingrese el nombre del archivo de pedidos: ";
+    cin >> filename;
+    managerPedidos.CargarPedidosDesdeArchivo(filename);
+    Menu::EsperarAccion();
 }

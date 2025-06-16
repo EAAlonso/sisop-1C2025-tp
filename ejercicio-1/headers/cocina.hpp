@@ -49,14 +49,13 @@ public:
     ~Cocina();
 
     void LlamarCocineros(); // crear procesos hijos
-private:
-    vector<MapHijosData> hijosData; // Guarda los PIDs de los hijos
-    void inicializar();
-    void atenderPedidos();
-
     void RecibirPedidos();
     void Cocinar();
     void ArmarPedidos();
     void EmpaquetarPedidos();
     void EntregarPedidos();
+private:
+    vector<MapHijosData> hijosData; // Guarda los PIDs de los hijos
+    void inicializar();
+    void atenderPedidos();
 };

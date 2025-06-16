@@ -16,6 +16,7 @@ public:
     void Mostrar();
     static void EsperarAccion();
     static string TipoComboToString(TipoCombo tipo);
+    void cargarArchivo();
 private:
     void mostrarTitulo();
     void mostrarMenu();

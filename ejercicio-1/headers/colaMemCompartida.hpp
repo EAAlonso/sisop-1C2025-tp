@@ -1,59 +1,80 @@
 #pragma once
+
+#include <string>
+#include <semaphore.h>
+#include <fcntl.h> 
 #include <sys/mman.h>
 #include <unistd.h>
-#include <semaphore.h>
-#include <cstdio>
-#include <string>
 #include <iostream>
-
-#include "enum.hpp"
-
-using namespace std;
+#include <fstream>
+#include <sstream>
+#include <ctime>
 
 #define MAX_PEDIDOS 10
 
-struct s_Combo
-{
-    int tiempoPreparacion; // Tiempo de preparación en segundos
-    TipoCombo tipo;
+enum EstadoPedido {
+    PENDIENTE,
+    RECIBIDO,
+    COCINADO,
+    ARMADO,
+    EMPAQUETADO,
+    ENTREGADO
 };
 
-struct s_Pedido
-{
+enum TipoCombo {
+    SIMPLE = 0,
+    DOBLE = 1,
+    COMPLETO = 2
+};
+
+struct s_Combo {
+    TipoCombo tipo;
+    int tiempoPreparacion;
+};
+
+struct s_Pedido {
     int id;
     s_Combo combo;
     EstadoPedido estado;
 };
 
-struct ColaPedidos
-{
-    s_Pedido pedidos[MAX_PEDIDOS];
+struct ColaPedidos {
     int pri;
     int ult;
     int cantidad;
+    s_Pedido pedidos[MAX_PEDIDOS];
+
+    // Semáforos embedded
+    sem_t mutex;
+    sem_t espacio;
+    sem_t items;
 };
 
-class ColaMemCompartida
-{
+using namespace std;
+
+class ColaMemCompartida {
+private:
+    std::string shm_name;
+    std::string sem_mutex_name;
+    std::string sem_espacio_name;
+    std::string sem_items_name;
+
+    int shm_fd;
+    ColaPedidos* cola;
+
+    sem_t* mutex;
+    sem_t* espacio;
+    sem_t* items;
+
 public:
-    ColaMemCompartida() : mutex(nullptr), espacio(nullptr), items(nullptr), cola(nullptr) {}
-    ColaMemCompartida(string nombre, string logFileName);
+    ColaMemCompartida(std::string id_prefix);
+    ColaMemCompartida(std::string id_prefix, bool inicializar);
     ~ColaMemCompartida();
 
-    bool Push(const s_Pedido &order);
-    bool Pop(s_Pedido &out, bool nonblocking = false);
+    bool Push(const s_Pedido& pedido);
+    bool Pop(s_Pedido& pedido);
+    int CantidadEnCola();
+
     void Log(const s_Pedido& pedido);
-
-    int init(string nombre);    
-private:
-    sem_t *mutex;
-    sem_t *espacio;
-    sem_t *items;
-    sem_t *logMutex;
-    ColaPedidos *cola;
-    string logFileName; // Nombre del archivo de log
-    const string logDir = "logs/"; // Directorio de logs
-
-    void InitLog(string nombre);
-    string buildLogString(const s_Pedido& pedido);
+    std::string buildLogString(const s_Pedido& pedido);
 };
