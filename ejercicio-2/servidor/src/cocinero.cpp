@@ -61,8 +61,8 @@ void Cocinero::trabajar() {
             sleep(2);
 
             if (pedido.clienteSocket != -1) {
-                close(pedido.clienteSocket);
-                cocina.liberarCliente();
+                string respuesta = "Pedido #" + to_string(pedido.numeroPedido) + " entregado exitosamente.\n";
+                send(pedido.clienteSocket, respuesta.c_str(), respuesta.size(), 0);
             }
         }
     } catch (const exception& e) {
