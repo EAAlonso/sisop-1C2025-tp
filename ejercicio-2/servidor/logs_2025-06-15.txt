@@ -1,0 +1,25 @@
+[22:00:15] [Cocinero 3] Nos vemoss 👋
+[22:00:15] [Cocinero 1] Nos vemoss 👋
+[22:00:15] [Cocinero 4] Nos vemoss 👋
+[22:00:15] [Cocinero 2] Nos vemoss 👋
+[22:00:15] [Cocinero 5] Nos vemoss 👋
+[22:00:21] [Cocinero 1] Nos vemoss 👋
+[22:00:21] [Cocinero 3] Nos vemoss 👋
+[22:00:21] [Cocinero 2] Nos vemoss 👋
+[22:00:21] [Cocinero 5] Nos vemoss 👋
+[22:00:21] [Cocinero 4] Nos vemoss 👋
+[22:00:34] [Cocinero 1] Pedido #1: Tomando pedido...
+[22:00:36] [Cocinero 1] Pedido #1: Cocinando...
+[22:00:38] [Cocinero 1] Pedido #1: Armando COMBO S: 1 carne, 1 queso, 2 panes
+[22:00:41] [Cocinero 1] Pedido #1: Empaquetando...
+[22:00:44] [Cocinero 1] Pedido #1: Entregado.
+[22:01:07] [Cocinero 3] Pedido #2: Tomando pedido...
+[22:01:09] [Cocinero 3] Pedido #2: Cocinando...
+[22:01:11] [Cocinero 3] Pedido #2: Armando COMBO C: 2 carnes, 2 quesos, lechuga, tomate, 3 panes
+[22:01:19] [Cocinero 3] Pedido #2: Empaquetando...
+[22:01:22] [Cocinero 3] Pedido #2: Entregado.
+[22:01:24] [Cocinero 2] Nos vemoss 👋
+[22:01:24] [Cocinero 5] Nos vemoss 👋
+[22:01:24] [Cocinero 4] Nos vemoss 👋
+[22:01:24] [Cocinero 1] Nos vemoss 👋
+[22:01:24] [Cocinero 3] Nos vemoss 👋

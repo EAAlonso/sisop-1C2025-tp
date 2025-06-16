@@ -43,15 +43,25 @@ void Cocina::abrirCocina() {
 }
 
 void Cocina::aceptarClientes() {
-    while (servidorActivo) {
+    while (true) {
         sockaddr_in direccionCliente;
         socklen_t tam = sizeof(direccionCliente);
         int socketCliente = accept(socketServidor, (struct sockaddr*)&direccionCliente, &tam);
-        if (socketCliente < 0) {
-            if (servidorActivo) perror("[Cocina] Error en accept");
-            continue;
+        
+        // Si el servidor ya está inactivo, cierro cualquier socket restante (como el dummy connect) y rompo el bucle.
+        if (!servidorActivo) {
+            if (socketCliente >= 0)
+                close(socketCliente);  
+            break;
         }
 
+        if (socketCliente < 0) {
+            // Si el socket falló por cierre del servidor, simplemente salimos
+            if (!servidorActivo) break;
+            
+            perror("[Cocina] Error en accept");
+            continue;
+        }
 
         {
             unique_lock<mutex> lock(mutexClientes);
@@ -120,12 +130,10 @@ void Cocina::liberarCliente() {
         lock_guard<mutex> lock(mutexColaPedidos);
         if (clientesActivos == 0 && colaPedidos.empty() && !cierreSolicitado) {
             cierreSolicitado = true;
-            cout << "[Cocina] Todos los clientes se retiraron y no hay más pedidos. Cerrando cocina..." << endl;
-            cerrarCocina();
-            raise(SIGINT);
+            cout << "[Cocina] Todos los clientes se retiraron y no hay más pedidos." << endl;
+            cvClientes.notify_one();
         }
     }
-    cvClientes.notify_one();
 }
 
 void Cocina::cerrarCocina() {
@@ -169,4 +177,9 @@ void Cocina::mostrarBienvenidaConsola() {
     cout << "\033[38;5;88m      █████████████      \033[0m\n";
     cout << "\033[38;5;179m        █████████        \033[0m\n";
     cout << endl;
+}
+
+void Cocina::esperarCierre() {
+    unique_lock<mutex> lock(mutexClientes);
+    cvClientes.wait(lock, [this]() { return cierreSolicitado; });
 }

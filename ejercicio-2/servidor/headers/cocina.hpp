@@ -43,11 +43,12 @@ public:
     queue<Pedido> colaPedidos;
     mutex mutexColaPedidos;
     condition_variable cvPedidos; // receive bloqueante ->  espera que otro hilo lo despierte con una señal 
-    atomic<bool> cierreSolicitado = false;
+    bool cierreSolicitado = false;
 
     void abrirCocina();
     void cerrarCocina();
     void liberarCliente();
+    void esperarCierre();
     int contadorPedidos = 1;
 
     int clientesActivos = 0;
