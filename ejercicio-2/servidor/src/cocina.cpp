@@ -43,15 +43,23 @@ void Cocina::abrirCocina() {
 }
 
 void Cocina::aceptarClientes() {
-    while (servidorActivo) {
+    while (true) {
         sockaddr_in direccionCliente;
         socklen_t tam = sizeof(direccionCliente);
         int socketCliente = accept(socketServidor, (struct sockaddr*)&direccionCliente, &tam);
-        if (socketCliente < 0) {
-            if (servidorActivo) perror("[Cocina] Error en accept");
-            continue;
+        
+        if (!servidorActivo) {
+            if (socketCliente >= 0)
+                close(socketCliente);  
+            break;
         }
 
+        if (socketCliente < 0) {
+            if (!servidorActivo) break;
+            
+            perror("[Cocina] Error en accept");
+            continue;
+        }
 
         {
             unique_lock<mutex> lock(mutexClientes);
@@ -63,47 +71,50 @@ void Cocina::aceptarClientes() {
             clientesActivos++;
         }
 
+        // A partir de acá el cambio grande:
         thread([this, socketCliente, direccionCliente]() {
             char ipCliente[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &direccionCliente.sin_addr, ipCliente, INET_ADDRSTRLEN);
             cout << "[Cocina] Conexión aceptada desde: " << ipCliente << endl;
 
-            char buffer[1024] = {0};
-            ssize_t bytes = recv(socketCliente, buffer, sizeof(buffer) - 1, 0);
-            if (bytes <= 0) {
-                cout << "[Cocina] Cliente desconectado sin enviar datos." << endl;
-                close(socketCliente);
-                liberarCliente(); 
-                return;
-            }
-
-            buffer[bytes] = '\0';
-            cout << "[Cocina] Mensaje recibido (crudo): " << buffer << endl;
-
-            try {
-                json pedidoJson = json::parse(buffer);
-
-                Pedido pedido;
-                pedido.combo = pedidoJson.value("combo", "");
-                pedido.clienteSocket = socketCliente;
-
-                {
-                    lock_guard<mutex> lock(mutexColaPedidos);
-                    pedido.numeroPedido = contadorPedidos++;
-                    colaPedidos.push(pedido);
-                    cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << endl;
+            char buffer[1024];
+            
+            while (true) {
+                memset(buffer, 0, sizeof(buffer));
+                ssize_t bytes = recv(socketCliente, buffer, sizeof(buffer) - 1, 0);
+                if (bytes <= 0) {
+                    cout << "[Cocina] Cliente se desconectó: " << ipCliente << endl;
+                    break;
                 }
 
-                cvPedidos.notify_one();
+                buffer[bytes] = '\0';
+                cout << "[Cocina] Mensaje recibido (crudo): " << buffer << endl;
 
-            } catch (...) {
-                cerr << "[Cocina] Error al parsear JSON del cliente." << endl;
-                string errorMsg = "Error: JSON inválido\n";
-                send(socketCliente, errorMsg.c_str(), errorMsg.size(), 0);
-                close(socketCliente);
-                liberarCliente();
-                return;
+                try {
+                    json pedidoJson = json::parse(buffer);
+
+                    Pedido pedido;
+                    pedido.combo = pedidoJson.value("combo", "");
+                    pedido.clienteSocket = socketCliente;
+
+                    {
+                        lock_guard<mutex> lock(mutexColaPedidos);
+                        pedido.numeroPedido = contadorPedidos++;
+                        colaPedidos.push(pedido);
+                        cout << "[Cocina] Pedido #" << pedido.numeroPedido << " recibido: " << pedido.combo << endl;
+                    }
+
+                    cvPedidos.notify_one();
+
+                } catch (...) {
+                    cerr << "[Cocina] Error al parsear JSON del cliente." << endl;
+                    string errorMsg = "Error: JSON inválido\n";
+                    send(socketCliente, errorMsg.c_str(), errorMsg.size(), 0);
+                }
             }
+
+            close(socketCliente);
+            liberarCliente();
         }).detach();
     }
 }
@@ -120,12 +131,10 @@ void Cocina::liberarCliente() {
         lock_guard<mutex> lock(mutexColaPedidos);
         if (clientesActivos == 0 && colaPedidos.empty() && !cierreSolicitado) {
             cierreSolicitado = true;
-            cout << "[Cocina] Todos los clientes se retiraron y no hay más pedidos. Cerrando cocina..." << endl;
-            raise(SIGINT);
-            cerrarCocina();
+            cout << "[Cocina] Todos los clientes se retiraron y no hay más pedidos." << endl;
+            cvClientes.notify_one();
         }
     }
-    cvClientes.notify_one();
 }
 
 void Cocina::cerrarCocina() {
@@ -169,4 +178,9 @@ void Cocina::mostrarBienvenidaConsola() {
     cout << "\033[38;5;88m      █████████████      \033[0m\n";
     cout << "\033[38;5;179m        █████████        \033[0m\n";
     cout << endl;
+}
+
+void Cocina::esperarCierre() {
+    unique_lock<mutex> lock(mutexClientes);
+    cvClientes.wait(lock, [this]() { return cierreSolicitado; });
 }
