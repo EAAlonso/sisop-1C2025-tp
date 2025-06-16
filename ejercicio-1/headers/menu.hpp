@@ -19,7 +19,9 @@ public:
 private:
     void mostrarTitulo();
     void mostrarMenu();
-    void seleccionarCombo();
     void mostrarOpcionesCombos();
+    void seleccionarCombo();
+    void cargarArchivo();
+    void terminar();
     ManagerPedidos managerPedidos;
 };

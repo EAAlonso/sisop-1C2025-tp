@@ -75,7 +75,7 @@ void Cocina::RecibirPedidos()
     while (true)
     {
         s_Pedido pedido;
-        sleep(5);
+        sleep(2);
         if (!ColaPendientes.Pop(pedido, true))
         {
             if (terminar)
