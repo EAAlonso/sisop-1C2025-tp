@@ -1,23 +1,24 @@
 #include "../headers/cocina.hpp"
+#include "../headers/managerPedidos.hpp"
 #include <fstream>
 #include <ctime>
 #include <sstream>
 #include <csignal>
 
-volatile sig_atomic_t terminar = 0;
+volatile sig_atomic_t c_terminar = 0;
 
-void handler_sigterm(int)
+void handler_sigterm_child(int)
 {
-    terminar = 1;
+    c_terminar = 1;
 }
 
 void Cocina::LlamarCocineros()
 {
-    auto recibo = [this]() { RecibirPedidos(); };
-    auto cocinero = [this]() { Cocinar(); };
-    auto armado = [this]() { ArmarPedidos(); };
-    auto empaque = [this]() { EmpaquetarPedidos(); };
-    auto entrega = [this]() { EntregarPedidos(); };
+    auto recibo = [this]() { recibirPedidos(); };
+    auto cocinero = [this]() { cocinar(); };
+    auto armado = [this]() { armarPedidos(); };
+    auto empaque = [this]() { empaquetarPedidos(); };
+    auto entrega = [this]() { entregarPedidos(); };
 
     // Vector de punteros a funciones
     std::vector<MapHijosFunc> _hijos;
@@ -69,16 +70,16 @@ void Cocina::LlamarCocineros()
     cout << "Todos los cocineros están activos.\n";
 }
 
-void Cocina::RecibirPedidos()
+void Cocina::recibirPedidos()
 {
-    signal(SIGTERM, handler_sigterm);
+    signal(SIGTERM, handler_sigterm_child);
     while (true)
     {
         s_Pedido pedido;
-        sleep(5);
+        sleep(2);
         if (!ColaPendientes.Pop(pedido, true))
         {
-            if (terminar)
+            if (c_terminar)
             {
                 cout << "Recibo: Terminado por SIGTERM." << endl;
                 break;
@@ -97,15 +98,15 @@ void Cocina::RecibirPedidos()
     }
 }
 
-void Cocina::Cocinar()
+void Cocina::cocinar()
 {
-    signal(SIGTERM, handler_sigterm);
+    signal(SIGTERM, handler_sigterm_child);
     while (true)
     {
         s_Pedido pedido;
         if (!ColaRecibidos.Pop(pedido, true))
         {
-            if (terminar)
+            if (c_terminar)
             {
                 cout << "Cocinero: Terminado por SIGTERM." << endl;
                 break;
@@ -124,15 +125,15 @@ void Cocina::Cocinar()
     }
 }
 
-void Cocina::ArmarPedidos()
+void Cocina::armarPedidos()
 {
-    signal(SIGTERM, handler_sigterm);
+    signal(SIGTERM, handler_sigterm_child);
     while (true)
     {
         s_Pedido pedido;
         if (!ColaCoccion.Pop(pedido,true))
         {
-            if (terminar)
+            if (c_terminar)
             {
                 cout << "Armado: Terminado por SIGTERM." << endl;
                 break;
@@ -150,15 +151,15 @@ void Cocina::ArmarPedidos()
     }
 }
 
-void Cocina::EmpaquetarPedidos()
+void Cocina::empaquetarPedidos()
 {
-    signal(SIGTERM, handler_sigterm);
+    signal(SIGTERM, handler_sigterm_child);
     while (true)
     {
         s_Pedido pedido;
         if (!ColaArmado.Pop(pedido, true))
         {
-            if (terminar)
+            if (c_terminar)
             {
                 cout << "Empaque: Terminado por SIGTERM." << endl;
                 break;
@@ -177,15 +178,15 @@ void Cocina::EmpaquetarPedidos()
     
 }
 
-void Cocina::EntregarPedidos()
+void Cocina::entregarPedidos()
 {
-    signal(SIGTERM, handler_sigterm);
+    signal(SIGTERM, handler_sigterm_child);
     while (true)
     {
         s_Pedido pedido;
         if (!ColaEmpaquetado.Pop(pedido, true))
         {
-            if (terminar)
+            if (c_terminar)
             {
                 cout << "Entrega: Terminado por SIGTERM." << endl;
                 break;
