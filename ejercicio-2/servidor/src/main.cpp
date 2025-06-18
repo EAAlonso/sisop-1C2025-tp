@@ -15,6 +15,7 @@ void signalCerrarCocina(int) {
 int main() {
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, signalCerrarCocina);
+    signal(SIGTERM, signalCerrarCocina);
 
     int puerto = 8080;
     cocinaPtr = new Cocina(puerto);
