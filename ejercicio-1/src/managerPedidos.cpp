@@ -11,7 +11,6 @@
 #include "../headers/menu.hpp"
 
 
-
 // Instancias globales para las 5 colas de estados
 ColaMemCompartida ColaPendientes = ColaMemCompartida("Pendientes", "1-pendientes.log");
 ColaMemCompartida ColaRecibidos = ColaMemCompartida("Recibidos", "2-recibidos.log");
@@ -66,8 +65,7 @@ void ManagerPedidos::CrearPedido(int comboId, bool lote)
     
     if (lote) return;
     
-    sleep(1);
-    Menu::EsperarAccion();
+    Menu::EsperarAccion(1);
 }
 
 void ManagerPedidos::CargarPedidosDesdeArchivo(const string& filename)
@@ -84,11 +82,23 @@ void ManagerPedidos::CargarPedidosDesdeArchivo(const string& filename)
     string linea;
     while (getline(archivo, linea))
     {
+        if (main_terminar) return;
         int comboId = stoi(linea);
         CrearPedido(comboId, true);
     }
 
     archivo.close();
     cout << "Todos los pedidos del archivo fueron cargados." << endl;
-    Menu::EsperarAccion();
+    Menu::EsperarAccion(1);
+}
+
+void ManagerPedidos::Terminar()
+{
+    cout << "Terminando el programa..." << endl;
+    terminar = true;
+    if (cocina)
+    {
+        delete cocina;
+        cocina = nullptr;
+    }
 }

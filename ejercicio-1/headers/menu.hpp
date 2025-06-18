@@ -8,20 +8,23 @@
 
 using namespace std;
 
+extern volatile sig_atomic_t main_terminar;
+
 class Menu
 {
 public:
-    Menu();
+    Menu(ManagerPedidos *managerPedidos) : managerPedidos(managerPedidos) {};
 
     void Mostrar();
-    static void EsperarAccion();
+    static void EsperarAccion(int segundos = 2);
     static string TipoComboToString(TipoCombo tipo);
+
 private:
     void mostrarTitulo();
     void mostrarMenu();
     void mostrarOpcionesCombos();
     void seleccionarCombo();
     void cargarArchivo();
-    void terminar();
-    ManagerPedidos managerPedidos;
+    void terminarDesdeMenu();
+    ManagerPedidos *managerPedidos;
 };
