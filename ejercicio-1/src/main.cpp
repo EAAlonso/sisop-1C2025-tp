@@ -9,7 +9,7 @@ Cocina* g_cocina = nullptr;
 
 volatile sig_atomic_t main_terminar = 0;
 
-void handleSignal(int sig)
+void handleSignal(int)
 {
     //cout << "Recibida señal: " << sig << endl;
     main_terminar = 1;
